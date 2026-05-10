@@ -105,10 +105,10 @@ async function sendPaymentConfirmationEmail(params: {
   onboarding_link: string;
   plan_price_usd: number;
 }): Promise<boolean> {
+  console.log(`[Email] Starting send to ${params.contact_email}`);
+  console.log(`[Email] SMTP config: host=${process.env.SMTP_HOST} port=${process.env.SMTP_PORT} user=${process.env.SMTP_USER} pass=${process.env.SMTP_PASS ? '***SET***' : 'EMPTY'}`);
   if (!process.env.SMTP_PASS) {
-    console.log(`[Email] SMTP_PASS not configured. Would send to ${params.contact_email}:`);
-    console.log(`         Subject: Pago confirmado - Completá tu onboarding en Vortis`);
-    console.log(`         Link: ${params.onboarding_link}`);
+    console.log(`[Email] SMTP_PASS not configured. Skipping.`);
     return false;
   }
 
@@ -192,7 +192,7 @@ async function sendPaymentConfirmationEmail(params: {
     console.log(`[Email] Sent payment confirmation to ${params.contact_email}`);
     return true;
   } catch (err: any) {
-    console.error('[Email] Error:', err.message);
+    console.error('[Email] FULL ERROR:', err.message, err.code, err.command);
     return false;
   }
 }
