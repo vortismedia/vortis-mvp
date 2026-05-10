@@ -282,6 +282,26 @@ function buildEmailHtml(params: { contact_name: string; onboarding_link: string;
 </body></html>`;
 }
 
+// Normalize phone numbers for WhatsApp API.
+// Argentina-specific: convert mobile WhatsApp format (+549XX) to Meta's old format (+5411 15 XX)
+// because Meta saves Argentine numbers with the "15" prefix instead of "9".
+function normalizePhoneForWhatsApp(phone: string): string {
+  let clean = phone.replace(/[\s\-\(\)\+]/g, '');
+
+  // Argentina mobile: 549 + area + number  →  54 + area + 15 + number
+  // E.g.: 5491154582646 (13 chars)  →  54111554582646 (14 chars)
+  if (clean.startsWith('549') && (clean.length === 12 || clean.length === 13)) {
+    const country = '54';
+    const rest = clean.substring(3); // remove '549'
+    // Area code in Argentina is 2 or 3 digits; for Buenos Aires it's "11"
+    const areaLength = rest.startsWith('11') ? 2 : 3;
+    const area = rest.substring(0, areaLength);
+    const number = rest.substring(areaLength);
+    clean = country + area + '15' + number;
+  }
+  return clean;
+}
+
 // ============ WhatsApp confirmation ============
 async function sendPaymentConfirmationWhatsApp(params: {
   contact_name: string;
@@ -297,7 +317,8 @@ async function sendPaymentConfirmationWhatsApp(params: {
     return false;
   }
 
-  const cleanPhone = params.contact_phone.replace(/[\s\-\(\)]/g, '').replace(/^\+/, '');
+  const cleanPhone = normalizePhoneForWhatsApp(params.contact_phone);
+  console.log(`[WhatsApp] Normalized ${params.contact_phone} -> ${cleanPhone}`);
 
   // Use template (required for test numbers, also more reliable for production)
   // If custom Vortis template doesn't exist yet, fallback to hello_world
