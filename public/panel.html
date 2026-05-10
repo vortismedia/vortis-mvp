@@ -375,6 +375,31 @@
         </div>
 
         <div class="card">
+          <h3>Simular Pago de Cliente Nuevo</h3>
+          <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:16px;">Crea un cliente como si hubiera pagado los $299 y le envía email + WhatsApp con el link al onboarding.</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="label">Nombre del contacto</div>
+              <input type="text" id="simName" placeholder="Tobias" style="width:100%;padding:8px;background:#0d1025;border:1px solid #2a2f52;border-radius:6px;color:#fff;margin-top:4px;">
+            </div>
+            <div class="info-item">
+              <div class="label">Email</div>
+              <input type="email" id="simEmail" placeholder="cliente@email.com" style="width:100%;padding:8px;background:#0d1025;border:1px solid #2a2f52;border-radius:6px;color:#fff;margin-top:4px;">
+            </div>
+            <div class="info-item">
+              <div class="label">WhatsApp (con +54)</div>
+              <input type="text" id="simPhone" placeholder="+5491154582646" style="width:100%;padding:8px;background:#0d1025;border:1px solid #2a2f52;border-radius:6px;color:#fff;margin-top:4px;">
+            </div>
+            <div class="info-item">
+              <div class="label">Nombre del negocio (opcional)</div>
+              <input type="text" id="simBiz" placeholder="Mi Negocio SRL" style="width:100%;padding:8px;background:#0d1025;border:1px solid #2a2f52;border-radius:6px;color:#fff;margin-top:4px;">
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="simulatePayment()">Simular Pago $299 + Enviar Notificaciones</button>
+          <div id="simResult" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="card">
           <h3>Notas Internas</h3>
           <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Memo interno de Vortis. No lo ven los clientes.</p>
           <textarea id="internalNotes" rows="6" style="width:100%;padding:12px;background:#0d1025;border:1px solid #2a2f52;border-radius:8px;color:#fff;font-size:0.85rem;resize:vertical;">Recordá: 1) Verificar Meta API antes de cada deploy. 2) Llamar a clientes nuevos en las primeras 24hs. 3) Revisar performance los lunes.</textarea>
@@ -851,6 +876,49 @@
       localStorage.setItem('cfgAds', document.getElementById('cfgAdsPerCampaign').value);
       localStorage.setItem('cfgAdSets', document.getElementById('cfgAdSets').value);
       showToast('Configuración guardada', 'success');
+    }
+
+    async function simulatePayment() {
+      const name = document.getElementById('simName').value.trim();
+      const email = document.getElementById('simEmail').value.trim();
+      const phone = document.getElementById('simPhone').value.trim();
+      const biz = document.getElementById('simBiz').value.trim();
+      const result = document.getElementById('simResult');
+
+      if (!name || !email) {
+        showToast('Nombre y email son requeridos', 'error');
+        return;
+      }
+
+      result.innerHTML = '<div style="color:#facc15;font-size:0.85rem;">Procesando...</div>';
+
+      try {
+        const res = await fetch('/api/payment/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contact_name: name,
+            contact_email: email,
+            contact_phone: phone,
+            business_name: biz || undefined,
+          }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          result.innerHTML = `
+            <div style="background:#0d3320;border:1px solid #1a5c38;padding:14px;border-radius:10px;margin-top:8px;">
+              <p style="color:#4ade80;font-weight:600;margin-bottom:8px;">✓ Pago simulado</p>
+              <p style="color:#b0b4cc;font-size:0.8rem;">Email: <strong>${data.notifications.email}</strong> · WhatsApp: <strong>${data.notifications.whatsapp}</strong></p>
+              <p style="color:#8b8fa3;font-size:0.75rem;margin-top:6px;">Link onboarding: <a href="${data.onboardingLink}" target="_blank" style="color:#4f6ef7;">${data.onboardingLink}</a></p>
+            </div>`;
+          showToast('Pago simulado y notificaciones enviadas', 'success');
+        } else {
+          result.innerHTML = `<div style="background:#2d1515;padding:14px;border-radius:10px;color:#ff6b6b;font-size:0.85rem;">${data.error}</div>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<div style="background:#2d1515;padding:14px;border-radius:10px;color:#ff6b6b;font-size:0.85rem;">Error de conexión</div>`;
+      }
     }
 
     // ========== TOAST ==========

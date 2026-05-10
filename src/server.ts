@@ -16,6 +16,7 @@ import approvalRoutes from './routes/approval';
 import analyticsRoutes from './routes/analytics';
 import creativesRoutes from './routes/creatives';
 import authRoutes, { requireAuth } from './routes/auth';
+import paymentRoutes from './routes/payment';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -37,6 +38,7 @@ app.use('/api/approval', approvalRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/creatives', creativesRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
