@@ -110,9 +110,16 @@ async function sendPaymentConfirmationEmail(params: {
   plan_price_usd: number;
 }): Promise<boolean> {
   console.log(`[Email] Starting send to ${params.contact_email}`);
-  console.log(`[Email] SMTP config: host=${process.env.SMTP_HOST} port=${process.env.SMTP_PORT} user=${process.env.SMTP_USER} pass=${process.env.SMTP_PASS ? '***SET***' : 'EMPTY'}`);
+
+  // Use Resend if configured (preferred, no SMTP issues)
+  if (process.env.RESEND_API_KEY) {
+    return sendViaResend(params);
+  }
+
+  // Fallback to SMTP
+  console.log(`[Email] SMTP fallback. Pass set: ${process.env.SMTP_PASS ? 'yes' : 'no'}`);
   if (!process.env.SMTP_PASS) {
-    console.log(`[Email] SMTP_PASS not configured. Skipping.`);
+    console.log(`[Email] No SMTP configured either. Skipping.`);
     return false;
   }
 
@@ -128,9 +135,8 @@ async function sendPaymentConfirmationEmail(params: {
       connectionTimeout: 10000,
       greetingTimeout: 10000,
       socketTimeout: 10000,
-      // Force IPv4 (Railway has IPv6 issues with Gmail)
       tls: { rejectUnauthorized: false },
-      // @ts-ignore - nodemailer accepts family but not in types
+      // @ts-ignore
       family: 4,
     } as any);
 
@@ -203,6 +209,77 @@ async function sendPaymentConfirmationEmail(params: {
     console.error('[Email] FULL ERROR:', err.message, err.code, err.command);
     return false;
   }
+}
+
+// ============ Resend email service ============
+async function sendViaResend(params: {
+  contact_name: string;
+  contact_email: string;
+  onboarding_link: string;
+  plan_price_usd: number;
+}): Promise<boolean> {
+  const html = buildEmailHtml(params);
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || 'Vortis Media <onboarding@resend.dev>',
+        to: [params.contact_email],
+        subject: '✓ Pago confirmado — Completá tu onboarding en Vortis Media',
+        html,
+      }),
+    });
+
+    const data: any = await res.json();
+    if (data.id) {
+      console.log(`[Resend] Sent email id=${data.id} to ${params.contact_email}`);
+      return true;
+    }
+    console.error('[Resend] Error response:', JSON.stringify(data));
+    return false;
+  } catch (err: any) {
+    console.error('[Resend] Exception:', err.message);
+    return false;
+  }
+}
+
+function buildEmailHtml(params: { contact_name: string; onboarding_link: string; plan_price_usd: number }): string {
+  return `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#0a0e27;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e0e0e0;">
+  <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <h1 style="color:#fff;font-size:28px;letter-spacing:2px;margin:0;">VORTIS MEDIA</h1>
+      <p style="color:#8b8fa3;font-size:14px;margin-top:4px;">IA generativa para campañas publicitarias</p>
+    </div>
+    <div style="background:#141832;border:1px solid #1e2345;border-radius:14px;padding:32px;">
+      <div style="background:#0d3320;border:1px solid #1a5c38;border-radius:10px;padding:14px;margin-bottom:24px;text-align:center;">
+        <p style="color:#4ade80;font-weight:600;font-size:16px;margin:0;">✓ Pago confirmado — USD $${params.plan_price_usd}</p>
+      </div>
+      <h2 style="color:#fff;font-size:22px;margin:0 0 12px;">Hola ${params.contact_name},</h2>
+      <p style="color:#b0b4cc;font-size:15px;line-height:1.6;margin:0 0 20px;">Gracias por confiar en Vortis Media. Tu pago fue procesado correctamente.</p>
+      <p style="color:#b0b4cc;font-size:15px;line-height:1.6;margin:0 0 24px;">El siguiente paso es completar el <strong style="color:#fff;">onboarding de tu negocio</strong>. Toma 5-10 minutos.</p>
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${params.onboarding_link}" style="display:inline-block;padding:16px 36px;background:linear-gradient(135deg,#4f6ef7,#3b5de7);color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:16px;">Completar mi onboarding →</a>
+      </div>
+      <p style="color:#8b8fa3;font-size:13px;line-height:1.5;margin:24px 0 0;text-align:center;">O copiá este link:<br><a href="${params.onboarding_link}" style="color:#4f6ef7;word-break:break-all;">${params.onboarding_link}</a></p>
+      <hr style="border:none;border-top:1px solid #1e2345;margin:28px 0;">
+      <h3 style="color:#8fa4ff;font-size:15px;margin:0 0 12px;">¿Qué viene después?</h3>
+      <ol style="color:#b0b4cc;font-size:14px;line-height:1.7;padding-left:20px;margin:0;">
+        <li>Completás el onboarding (datos del negocio + fotos)</li>
+        <li>Nuestra IA genera 5 anuncios personalizados</li>
+        <li>Te avisamos por WhatsApp cuando estén listos</li>
+        <li>Aprobás los anuncios y los publicamos en Meta Ads</li>
+        <li>Recibís métricas y reportes semanales</li>
+      </ol>
+    </div>
+    <p style="text-align:center;color:#8b8fa3;font-size:12px;margin-top:24px;">¿Dudas? Respondé este email.<br>Vortis Media · IA para campañas publicitarias</p>
+  </div>
+</body></html>`;
 }
 
 // ============ WhatsApp confirmation ============
