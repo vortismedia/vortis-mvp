@@ -52,21 +52,35 @@ router.post('/simulate', async (req: Request, res: Response) => {
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const onboardingLink = `${appUrl}/?id=${clientId}`;
 
-    // 1. Send confirmation email
-    const emailSent = await sendPaymentConfirmationEmail({
-      contact_name,
-      contact_email,
-      onboarding_link: onboardingLink,
-      plan_price_usd,
-    });
+    // Run email + WhatsApp in parallel with timeouts so one doesn't block the other
+    const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> =>
+      Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+      ]);
 
-    // 2. Send WhatsApp confirmation
-    const waSent = await sendPaymentConfirmationWhatsApp({
-      contact_name,
-      contact_phone: contact_phone || '',
-      onboarding_link: onboardingLink,
-      plan_price_usd,
-    });
+    const [emailSent, waSent] = await Promise.all([
+      withTimeout(
+        sendPaymentConfirmationEmail({
+          contact_name,
+          contact_email,
+          onboarding_link: onboardingLink,
+          plan_price_usd,
+        }),
+        15000,
+        false
+      ),
+      withTimeout(
+        sendPaymentConfirmationWhatsApp({
+          contact_name,
+          contact_phone: contact_phone || '',
+          onboarding_link: onboardingLink,
+          plan_price_usd,
+        }),
+        10000,
+        false
+      ),
+    ]);
 
     res.json({
       success: true,
@@ -107,6 +121,9 @@ async function sendPaymentConfirmationEmail(params: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 8000,
     });
 
     const html = `
