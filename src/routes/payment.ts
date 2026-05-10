@@ -3,6 +3,10 @@ import { v4 as uuid } from 'uuid';
 import { getDb } from '../db/database';
 import { sendCampaignReadyEmail } from '../services/email';
 import nodemailer from 'nodemailer';
+import dns from 'dns';
+
+// Force IPv4 globally (Railway has issues with IPv6 to Gmail)
+dns.setDefaultResultOrder('ipv4first');
 
 const router = Router();
 
@@ -121,10 +125,14 @@ async function sendPaymentConfirmationEmail(params: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 8000,
-    });
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      // Force IPv4 (Railway has IPv6 issues with Gmail)
+      tls: { rejectUnauthorized: false },
+      // @ts-ignore - nodemailer accepts family but not in types
+      family: 4,
+    } as any);
 
     const html = `
 <!DOCTYPE html>
