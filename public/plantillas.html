@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Plantillas Creativas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; }
+    .header .nav { display: flex; gap: 16px; }
+    .header .nav a { color: #4f6ef7; text-decoration: none; font-size: 0.85rem; }
+    .main { max-width: 1400px; margin: 0 auto; padding: 32px 20px; }
+
+    /* Client selector */
+    .selector-bar { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 20px; margin-bottom: 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .selector-bar label { color: #8b8fa3; font-size: 0.85rem; font-weight: 500; }
+    .selector-bar select { padding: 10px 16px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 8px; color: #fff; font-size: 0.9rem; min-width: 300px; }
+    .selector-bar select:focus { outline: none; border-color: #4f6ef7; }
+    .btn-load { padding: 10px 24px; background: #4f6ef7; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-load:hover { background: #3b5de7; }
+
+    /* Brand bar */
+    .brand-bar { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; display: none; }
+    .brand-bar.show { display: flex; }
+    .brand-item { font-size: 0.8rem; color: #8b8fa3; }
+    .brand-item strong { color: #fff; }
+
+    /* Template grid */
+    .templates-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; }
+
+    .template-wrapper { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 20px; }
+    .template-label { font-size: 0.75rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+    .template-name { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 12px; }
+    .template-desc { font-size: 0.8rem; color: #8b8fa3; margin-bottom: 16px; }
+
+    /* FEED Templates 1080x1080 - scaled to 400x400 */
+    .preview-feed { width: 400px; height: 400px; border-radius: 8px; overflow: hidden; position: relative; margin: 0 auto; }
+
+    /* STORY Templates 1080x1920 - scaled to 225x400 */
+    .preview-story { width: 225px; height: 400px; border-radius: 8px; overflow: hidden; position: relative; margin: 0 auto; }
+
+    /* ============ LAYOUT A: Foto fondo + overlay ============ */
+    .layout-a { background-size: cover; background-position: center; background-color: #1a1a2e; }
+    .layout-a .overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.85)); padding: 30px 24px 24px; }
+    .layout-a .logo-corner { position: absolute; top: 16px; left: 16px; width: 60px; height: 60px; background: rgba(255,255,255,0.95); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .layout-a .logo-corner img { max-width: 50px; max-height: 50px; object-fit: contain; }
+    .layout-a .logo-corner .logo-placeholder { font-size: 0.5rem; color: #333; text-align: center; }
+    .layout-a .headline { font-size: 1.2rem; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 8px; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+    .layout-a .subtext { font-size: 0.75rem; color: rgba(255,255,255,0.8); margin-bottom: 14px; }
+    .layout-a .cta-btn { display: inline-block; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; color: #fff; }
+    .layout-a .brand-strip { position: absolute; top: 16px; right: 16px; padding: 6px 12px; border-radius: 6px; font-size: 0.55rem; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ============ LAYOUT B: Foto arriba + bloque color abajo ============ */
+    .layout-b { background-color: #f5f5f5; }
+    .layout-b .photo-top { width: 100%; height: 55%; background-size: cover; background-position: center; background-color: #2a2a3e; position: relative; }
+    .layout-b .photo-top .logo-badge { position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); width: 44px; height: 44px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); overflow: hidden; z-index: 2; }
+    .layout-b .photo-top .logo-badge img { max-width: 34px; max-height: 34px; object-fit: contain; }
+    .layout-b .content-bottom { width: 100%; height: 45%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px 20px; text-align: center; }
+    .layout-b .content-bottom .headline { font-size: 1.1rem; font-weight: 800; line-height: 1.3; margin-bottom: 6px; }
+    .layout-b .content-bottom .subtext { font-size: 0.7rem; margin-bottom: 14px; opacity: 0.7; }
+    .layout-b .content-bottom .cta-btn { display: inline-block; padding: 10px 28px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; color: #fff; }
+
+    /* ============ CAROUSEL ============ */
+    .carousel-container { width: 400px; margin: 0 auto; position: relative; }
+    .carousel-track { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 0; border-radius: 8px; scrollbar-width: none; }
+    .carousel-track::-webkit-scrollbar { display: none; }
+    .carousel-slide { min-width: 400px; height: 400px; scroll-snap-align: start; position: relative; flex-shrink: 0; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+    .carousel-dots .dot { width: 8px; height: 8px; border-radius: 50%; background: #2a2f52; }
+    .carousel-dots .dot.active { background: #4f6ef7; }
+
+    /* Slide styles */
+    .slide-hook { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+    .slide-hook .hook-text { font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 16px; }
+    .slide-hook .hook-sub { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+
+    .slide-benefit { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
+    .slide-benefit .benefit-icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .slide-benefit .benefit-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .slide-benefit .benefit-desc { font-size: 0.8rem; color: rgba(255,255,255,0.7); line-height: 1.5; }
+
+    .slide-cta { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px; }
+    .slide-cta .cta-big { font-size: 1.3rem; font-weight: 800; color: #fff; margin-bottom: 20px; }
+    .slide-cta .cta-button { padding: 14px 40px; border-radius: 10px; font-weight: 700; font-size: 1rem; color: #fff; }
+    .slide-cta .cta-contact { font-size: 0.75rem; color: rgba(255,255,255,0.6); margin-top: 12px; }
+
+    /* Variant labels */
+    .variant-tag { position: absolute; top: 8px; right: 8px; padding: 3px 8px; background: rgba(0,0,0,0.6); border-radius: 4px; font-size: 0.55rem; color: #facc15; font-weight: 600; text-transform: uppercase; z-index: 5; }
+
+    /* Copy text areas */
+    .copy-block { background: #0d1025; border: 1px solid #2a2f52; border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 0.75rem; color: #b0b4cc; }
+    .copy-block strong { color: #fff; }
+
+    .empty-state { text-align: center; padding: 80px 20px; }
+    .empty-state h2 { color: #fff; margin-bottom: 8px; }
+    .empty-state p { color: #8b8fa3; }
+
+    @media (max-width: 900px) { .templates-grid { grid-template-columns: 1fr; } .preview-feed, .carousel-container, .carousel-slide { width: 100%; min-width: unset; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>VORTIS — Plantillas Creativas</h1>
+    <div class="nav">
+      <a href="/creativos">Panel Creativos</a>
+      <a href="/admin">Admin</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="selector-bar">
+      <label>Cliente:</label>
+      <select id="clientSelect"><option value="">Seleccionar cliente...</option></select>
+      <button class="btn-load" onclick="loadClient()">Generar Plantillas</button>
+    </div>
+
+    <div class="brand-bar" id="brandBar">
+      <div class="brand-item"><strong id="bName">-</strong></div>
+      <div class="brand-item">Colores: <strong id="bColors">-</strong></div>
+      <div class="brand-item">Slogan: <strong id="bSlogan">-</strong></div>
+      <div class="brand-item">Tono: <strong id="bTone">-</strong></div>
+    </div>
+
+    <div id="templatesArea">
+      <div class="empty-state">
+        <h2>Selecciona un cliente para ver las plantillas</h2>
+        <p>Las plantillas se auto-completan con los datos del cliente, el copy de la IA, y los colores de su marca.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let _client = null;
+    let _ads = [];
+    let _campaign = null;
+
+    // Load clients
+    fetch('/api/clients').then(r => r.json()).then(data => {
+      const sel = document.getElementById('clientSelect');
+      data.clients.forEach(c => {
+        sel.innerHTML += `<option value="${c.id}">${c.business_name} (${c.industry})</option>`;
+      });
+    });
+
+    async function loadClient() {
+      const id = document.getElementById('clientSelect').value;
+      if (!id) return;
+
+      const res = await fetch('/api/clients/' + id);
+      const data = await res.json();
+      _client = data.client;
+      _ads = data.ads || [];
+      _campaign = data.campaigns?.[0] || null;
+
+      // Brand bar
+      document.getElementById('brandBar').classList.add('show');
+      document.getElementById('bName').textContent = _client.business_name;
+      document.getElementById('bColors').textContent = _client.brand_colors || 'No definidos';
+      document.getElementById('bSlogan').textContent = _client.slogan || 'No tiene';
+      document.getElementById('bTone').textContent = _client.brand_tone || 'profesional';
+
+      if (_ads.length === 0) {
+        document.getElementById('templatesArea').innerHTML = '<div class="empty-state"><h2>Este cliente no tiene anuncios generados</h2><p>Esperando a que la IA complete la generacion.</p></div>';
+        return;
+      }
+
+      renderTemplates();
+    }
+
+    function getColors() {
+      const raw = _client.brand_colors || '';
+      // Try to extract meaningful colors, fallback to brand defaults
+      const colorMap = {
+        'azul': '#1a56db', 'rojo': '#dc2626', 'verde': '#0d9f4f', 'negro': '#1a1a1a',
+        'blanco': '#ffffff', 'dorado': '#d4a017', 'naranja': '#ea580c', 'amarillo': '#eab308',
+        'celeste': '#38bdf8', 'gris': '#6b7280', 'violeta': '#7c3aed', 'rosa': '#ec4899',
+        'marron': '#78350f', 'bordo': '#7f1d1d',
+      };
+      const words = raw.toLowerCase().split(/[,\s]+/);
+      const found = words.map(w => colorMap[w]).filter(Boolean);
+      return {
+        primary: found[0] || '#4f6ef7',
+        secondary: found[1] || '#0d1025',
+        accent: found[2] || '#ffffff',
+      };
+    }
+
+    function renderTemplates() {
+      const c = getColors();
+      const ad = (i) => _ads[i] || _ads[0] || { headline: 'Headline', description: 'Descripcion del anuncio', cta_text: 'Enviar mensaje' };
+      const logoUrl = _client.logo_url || '';
+      const photoUrl = _client.photo_urls?.split(',')[0]?.trim() || '';
+      const logoHtml = logoUrl
+        ? `<img src="${logoUrl}" alt="logo">`
+        : `<div class="logo-placeholder">${_client.business_name.substring(0,2).toUpperCase()}</div>`;
+
+      const bgPhoto = photoUrl ? `background-image:url('${photoUrl}');` : `background-color:${c.secondary};`;
+
+      const area = document.getElementById('templatesArea');
+      area.innerHTML = `
+        <div class="templates-grid">
+
+          <!-- ========== FEED A1: Beneficio directo ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Feed 1080x1080</div>
+            <div class="template-name">Layout A - Variante 1: Beneficio Directo</div>
+            <div class="preview-feed layout-a" style="${bgPhoto}">
+              <div class="variant-tag">Beneficio directo</div>
+              <div class="logo-corner">${logoHtml}</div>
+              <div class="brand-strip" style="background:${c.primary};">${_client.business_name}</div>
+              <div class="overlay">
+                <div class="headline">${ad(0).headline}</div>
+                <div class="subtext">${_client.city} | ${_client.slogan || _client.business_name}</div>
+                <div class="cta-btn" style="background:${c.primary};">${ad(0).cta_text}</div>
+              </div>
+            </div>
+            <div class="copy-block">
+              <strong>Copy:</strong> ${ad(0).description.substring(0, 120)}...
+            </div>
+          </div>
+
+          <!-- ========== FEED A2: Urgencia ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Feed 1080x1080</div>
+            <div class="template-name">Layout A - Variante 2: Urgencia</div>
+            <div class="preview-feed layout-a" style="${bgPhoto}">
+              <div class="variant-tag">Urgencia</div>
+              <div class="logo-corner">${logoHtml}</div>
+              <div class="brand-strip" style="background:#dc2626;">ULTIMOS CUPOS</div>
+              <div class="overlay">
+                <div class="headline">${ad(1).headline}</div>
+                <div class="subtext">Solo por tiempo limitado | ${_client.city}</div>
+                <div class="cta-btn" style="background:#dc2626;">${ad(1).cta_text}</div>
+              </div>
+            </div>
+            <div class="copy-block">
+              <strong>Copy:</strong> ${ad(1).description.substring(0, 120)}...
+            </div>
+          </div>
+
+          <!-- ========== FEED A3: Prueba social ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Feed 1080x1080</div>
+            <div class="template-name">Layout A - Variante 3: Prueba Social</div>
+            <div class="preview-feed layout-a" style="${bgPhoto}">
+              <div class="variant-tag">Prueba social</div>
+              <div class="logo-corner">${logoHtml}</div>
+              <div class="brand-strip" style="background:${c.primary};">+100 CLIENTES</div>
+              <div class="overlay">
+                <div class="headline">${ad(2).headline}</div>
+                <div class="subtext">"El mejor servicio de ${_client.city}" - Clientes reales</div>
+                <div class="cta-btn" style="background:${c.primary};">${ad(2).cta_text}</div>
+              </div>
+            </div>
+            <div class="copy-block">
+              <strong>Copy:</strong> ${ad(2).description.substring(0, 120)}...
+            </div>
+          </div>
+
+          <!-- ========== FEED B1: Problema/dolor ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Feed 1080x1080</div>
+            <div class="template-name">Layout B - Variante 4: Problema / Dolor</div>
+            <div class="preview-feed layout-b">
+              <div class="variant-tag">Problema / dolor</div>
+              <div class="photo-top" style="${bgPhoto}">
+                <div class="logo-badge">${logoHtml}</div>
+              </div>
+              <div class="content-bottom" style="background:${c.primary};">
+                <div class="headline" style="color:#fff;">${ad(3).headline}</div>
+                <div class="subtext" style="color:rgba(255,255,255,0.7);">${_client.city} | ${_client.business_name}</div>
+                <div class="cta-btn" style="background:rgba(255,255,255,0.2);border:2px solid #fff;">${ad(3).cta_text}</div>
+              </div>
+            </div>
+            <div class="copy-block">
+              <strong>Copy:</strong> ${ad(3).description.substring(0, 120)}...
+            </div>
+          </div>
+
+          <!-- ========== FEED B2: Emocional ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Feed 1080x1080</div>
+            <div class="template-name">Layout B - Variante 5: Emocional</div>
+            <div class="preview-feed layout-b">
+              <div class="variant-tag">Emocional</div>
+              <div class="photo-top" style="${bgPhoto}">
+                <div class="logo-badge">${logoHtml}</div>
+              </div>
+              <div class="content-bottom" style="background:#1a1a2e;">
+                <div class="headline" style="color:${c.primary};">${ad(4).headline}</div>
+                <div class="subtext" style="color:#aaa;">${_client.slogan || _client.differentiators?.substring(0,60) || _client.business_name}</div>
+                <div class="cta-btn" style="background:${c.primary};">${ad(4).cta_text}</div>
+              </div>
+            </div>
+            <div class="copy-block">
+              <strong>Copy:</strong> ${ad(4).description.substring(0, 120)}...
+            </div>
+          </div>
+
+          <!-- ========== STORY A1 ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Story 1080x1920</div>
+            <div class="template-name">Story Layout A - Beneficio</div>
+            <div class="preview-story layout-a" style="${bgPhoto}">
+              <div class="variant-tag">Story - Beneficio</div>
+              <div class="logo-corner" style="top:20px;left:50%;transform:translateX(-50%);width:50px;height:50px;">${logoHtml}</div>
+              <div class="overlay" style="padding:20px 16px 30px;">
+                <div class="headline" style="font-size:1rem;">${ad(0).headline}</div>
+                <div class="subtext">${_client.city}</div>
+                <div class="cta-btn" style="background:${c.primary};font-size:0.7rem;padding:8px 18px;width:100%;text-align:center;">${ad(0).cta_text} &uarr;</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== STORY A2 ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Story 1080x1920</div>
+            <div class="template-name">Story Layout A - Urgencia</div>
+            <div class="preview-story layout-a" style="${bgPhoto}">
+              <div class="variant-tag">Story - Urgencia</div>
+              <div class="brand-strip" style="background:#dc2626;top:20px;right:auto;left:50%;transform:translateX(-50%);font-size:0.6rem;">OFERTA LIMITADA</div>
+              <div class="overlay" style="padding:20px 16px 30px;">
+                <div class="headline" style="font-size:1rem;">${ad(1).headline}</div>
+                <div class="subtext">${_client.business_name}</div>
+                <div class="cta-btn" style="background:#dc2626;font-size:0.7rem;padding:8px 18px;width:100%;text-align:center;">Consultar ahora &uarr;</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== STORY B1 ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Story 1080x1920</div>
+            <div class="template-name">Story Layout B - Problema</div>
+            <div class="preview-story layout-b">
+              <div class="variant-tag">Story - Problema</div>
+              <div class="photo-top" style="${bgPhoto};height:50%;">
+                <div class="logo-badge" style="bottom:-18px;width:36px;height:36px;">${logoHtml}</div>
+              </div>
+              <div class="content-bottom" style="background:${c.primary};height:50%;padding:24px 14px 16px;">
+                <div class="headline" style="color:#fff;font-size:0.9rem;">${ad(3).headline}</div>
+                <div class="subtext" style="color:rgba(255,255,255,0.7);font-size:0.6rem;">${_client.city}</div>
+                <div class="cta-btn" style="background:rgba(255,255,255,0.2);border:2px solid #fff;font-size:0.65rem;padding:8px 16px;width:100%;text-align:center;">${ad(3).cta_text} &uarr;</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== STORY B2 ========== -->
+          <div class="template-wrapper">
+            <div class="template-label">Story 1080x1920</div>
+            <div class="template-name">Story Layout B - Emocional</div>
+            <div class="preview-story layout-b">
+              <div class="variant-tag">Story - Emocional</div>
+              <div class="photo-top" style="${bgPhoto};height:50%;"></div>
+              <div class="content-bottom" style="background:#1a1a2e;height:50%;padding:20px 14px 16px;">
+                <div class="headline" style="color:${c.primary};font-size:0.9rem;">${ad(4).headline}</div>
+                <div class="subtext" style="color:#888;font-size:0.6rem;">${_client.slogan || _client.business_name}</div>
+                <div class="cta-btn" style="background:${c.primary};font-size:0.65rem;padding:8px 16px;width:100%;text-align:center;">${ad(4).cta_text} &uarr;</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== CAROUSEL ========== -->
+          <div class="template-wrapper" style="grid-column: 1 / -1;">
+            <div class="template-label">Carrusel 1080x1080 (5 slides)</div>
+            <div class="template-name">Carrusel completo - Hook + Beneficios + CTA</div>
+            <div class="carousel-container">
+              <div class="carousel-track" id="carouselTrack">
+                <!-- Slide 1: Hook -->
+                <div class="carousel-slide slide-hook" style="background:${c.primary};">
+                  <div class="hook-text">${ad(0).headline}</div>
+                  <div class="hook-sub">Desliza para saber mas &rarr;</div>
+                </div>
+                <!-- Slide 2 -->
+                <div class="carousel-slide slide-benefit" style="background:${c.secondary || '#0d1025'};">
+                  <div class="benefit-icon">&#10003;</div>
+                  <div class="benefit-title">Calidad Garantizada</div>
+                  <div class="benefit-desc">${_client.differentiators?.substring(0, 100) || _client.product_service?.substring(0, 100) || 'Descripcion del beneficio principal'}</div>
+                </div>
+                <!-- Slide 3 -->
+                <div class="carousel-slide slide-benefit" style="background:${c.primary};opacity:0.9;">
+                  <div class="benefit-icon">&#9733;</div>
+                  <div class="benefit-title">Experiencia Comprobada</div>
+                  <div class="benefit-desc">+100 clientes confian en ${_client.business_name} en ${_client.city}</div>
+                </div>
+                <!-- Slide 4 -->
+                <div class="carousel-slide" style="${bgPhoto};background-size:cover;background-position:center;">
+                  <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.8));padding:30px 24px 20px;">
+                    <div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:6px;">Resultados que hablan</div>
+                    <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);">${_client.price_range ? 'Desde ' + _client.price_range : 'Consulta sin compromiso'}</div>
+                  </div>
+                </div>
+                <!-- Slide 5: CTA -->
+                <div class="carousel-slide slide-cta" style="background:${c.primary};">
+                  <div class="cta-big">Contactanos hoy</div>
+                  <div class="cta-button" style="background:rgba(255,255,255,0.2);border:2px solid #fff;">${ad(0).cta_text}</div>
+                  <div class="cta-contact">${_client.business_name} | ${_client.city}</div>
+                </div>
+              </div>
+              <div class="carousel-dots">
+                <div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+              </div>
+            </div>
+            <div class="copy-block" style="margin-top:16px;">
+              <strong>Instrucciones carrusel:</strong> Slide 1 = Hook (pregunta o afirmacion que atrape). Slides 2-3 = Beneficios clave. Slide 4 = Foto real del negocio con resultado. Slide 5 = CTA fuerte con contacto.
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

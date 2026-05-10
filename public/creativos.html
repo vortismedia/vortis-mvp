@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Panel Creativos</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; }
+    .header .nav { display: flex; gap: 16px; }
+    .header .nav a { color: #4f6ef7; text-decoration: none; font-size: 0.85rem; }
+    .main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+
+    .tabs-bar { display: flex; gap: 4px; margin-bottom: 24px; background: #141832; border-radius: 12px; padding: 4px; border: 1px solid #1e2345; }
+    .tab-btn { flex: 1; padding: 12px; text-align: center; border-radius: 8px; font-size: 0.85rem; font-weight: 500; color: #8b8fa3; cursor: pointer; border: none; background: none; transition: all 0.2s; }
+    .tab-btn:hover { color: #b0b4cc; }
+    .tab-btn.active { background: #4f6ef7; color: #fff; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-box { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-box .num { font-size: 2rem; font-weight: 700; color: #fff; }
+    .stat-box .lbl { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; margin-top: 4px; }
+    .stat-box.pending .num { color: #facc15; }
+    .stat-box.done .num { color: #4ade80; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .brief-card { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s; }
+    .brief-card:hover { border-color: #4f6ef7; }
+    .brief-card .brief-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .brief-card .business-name { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .brief-card .format-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .format-badge.feed { background: #0d1a33; color: #60a5fa; }
+    .format-badge.story { background: #2d0d33; color: #c084fc; }
+    .format-badge.carousel { background: #0d3320; color: #4ade80; }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: 8px; }
+    .status-badge.pending { background: #2d2a0d; color: #facc15; }
+    .status-badge.completed { background: #0d3320; color: #4ade80; }
+
+    .brief-content { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .brief-field { background: #0d1025; border-radius: 8px; padding: 12px; }
+    .brief-field .field-label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .brief-field .field-value { font-size: 0.9rem; color: #e0e0e0; }
+
+    .brief-copy { background: #0d1025; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .brief-copy .copy-headline { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .brief-copy .copy-desc { font-size: 0.85rem; color: #b0b4cc; line-height: 1.6; margin-bottom: 8px; }
+    .brief-copy .copy-cta { display: inline-block; padding: 8px 20px; background: #4f6ef7; color: #fff; border-radius: 8px; font-size: 0.8rem; }
+
+    .assets-section { margin-bottom: 16px; }
+    .assets-section h4 { color: #8fa4ff; font-size: 0.85rem; margin-bottom: 8px; }
+    .asset-checklist { display: flex; flex-wrap: wrap; gap: 8px; }
+    .asset-item { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; }
+    .asset-item.uploaded { background: #0d3320; color: #4ade80; }
+    .asset-item.missing { background: #2d1515; color: #ff6b6b; }
+
+    .brief-actions { display: flex; gap: 12px; align-items: center; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-complete { background: #0d9f4f; color: #fff; }
+    .btn-complete:hover { background: #0a7f3f; }
+    .btn-view { background: #4f6ef7; color: #fff; }
+    .btn-view:hover { background: #3b5de7; }
+    .complete-input { flex: 1; padding: 10px 14px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 8px; color: #fff; font-size: 0.85rem; }
+    .complete-input:focus { outline: none; border-color: #4f6ef7; }
+
+    .template-card { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+    .template-card h3 { color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .template-preview { display: flex; gap: 24px; align-items: flex-start; }
+    .template-mockup { border: 2px dashed #2a2f52; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; position: relative; flex-shrink: 0; }
+    .template-mockup.feed { width: 200px; height: 200px; }
+    .template-mockup.story { width: 120px; height: 213px; }
+    .template-mockup.carousel { width: 200px; height: 200px; }
+    .zone { position: absolute; border: 1px dashed #4f6ef7; border-radius: 4px; font-size: 0.55rem; color: #4f6ef7; display: flex; align-items: center; justify-content: center; text-align: center; padding: 2px; }
+    .template-specs { flex: 1; }
+    .spec-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #1e2345; font-size: 0.85rem; }
+    .spec-row .spec-label { color: #8b8fa3; }
+    .spec-row .spec-value { color: #fff; }
+
+    .tips-box { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 16px; margin-top: 12px; }
+    .tips-box h4 { color: #facc15; font-size: 0.8rem; margin-bottom: 8px; }
+    .tips-box ul { list-style: none; padding: 0; }
+    .tips-box li { font-size: 0.8rem; color: #b0b4cc; padding: 4px 0; padding-left: 16px; position: relative; }
+    .tips-box li::before { content: ''; position: absolute; left: 0; top: 10px; width: 6px; height: 6px; background: #facc15; border-radius: 50%; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #8b8fa3; }
+    .empty-state h3 { color: #fff; margin-bottom: 8px; }
+
+    @media (max-width: 768px) { .stats-row { grid-template-columns: 1fr 1fr; } .brief-content { grid-template-columns: 1fr; } .template-preview { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>VORTIS — Panel Creativos</h1>
+    <div class="nav">
+      <a href="/admin">Admin</a>
+      <a href="/analytics">Analytics</a>
+      <a href="/">Onboarding</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="stats-row">
+      <div class="stat-box pending"><div class="num" id="statPending">0</div><div class="lbl">Pendientes</div></div>
+      <div class="stat-box done"><div class="num" id="statCompleted">0</div><div class="lbl">Completados</div></div>
+      <div class="stat-box"><div class="num" id="statTotal">0</div><div class="lbl">Total Briefs</div></div>
+      <div class="stat-box"><div class="num" id="statClients">0</div><div class="lbl">Clientes</div></div>
+    </div>
+
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="showPanel('briefs')">Briefs Pendientes</button>
+      <button class="tab-btn" onclick="showPanel('completed')">Completados</button>
+      <button class="tab-btn" onclick="showPanel('templates')">Plantillas Base</button>
+      <button class="tab-btn" onclick="showPanel('generate')">Generar Briefs</button>
+    </div>
+
+    <div id="panel-briefs" class="tab-panel active">
+      <div id="briefsList"></div>
+    </div>
+
+    <div id="panel-completed" class="tab-panel">
+      <div id="completedList"></div>
+    </div>
+
+    <div id="panel-templates" class="tab-panel">
+      <div id="templatesList"></div>
+    </div>
+
+    <div id="panel-generate" class="tab-panel">
+      <div class="template-card">
+        <h3>Generar Briefs para un Cliente</h3>
+        <p style="color:#8b8fa3;margin-bottom:16px;">Seleccioná un cliente con campaña lista para generar automáticamente los briefs creativos (1 feed + 1 story por anuncio).</p>
+        <div style="display:flex;gap:12px;margin-bottom:16px;">
+          <select id="clientSelect" class="complete-input" style="flex:2;">
+            <option value="">Cargando clientes...</option>
+          </select>
+          <button class="btn btn-view" onclick="generateBriefs()">Generar Briefs</button>
+        </div>
+        <div id="generateResult"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INDUSTRY_NAMES = {
+      deportes_recreacion: 'Deportes', estetica_cuidado_personal: 'Estetica',
+      servicios_hogar: 'Hogar/Constr.', educacion: 'Educacion', gastronomia: 'Gastronomia',
+      salud: 'Salud', inmobiliaria: 'Inmobiliaria', automotriz: 'Automotriz',
+      tecnologia: 'Tecnologia', otro: 'Otro',
+    };
+
+    function showPanel(name) {
+      document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    async function loadAll() {
+      await Promise.all([loadBriefs(), loadTemplates(), loadClients()]);
+    }
+
+    async function loadBriefs() {
+      try {
+        const res = await fetch('/api/creatives/briefs');
+        const data = await res.json();
+        const pending = data.briefs.filter(b => b.status === 'pending');
+        const completed = data.briefs.filter(b => b.status === 'completed');
+        const uniqueClients = new Set(data.briefs.map(b => b.client_id));
+
+        document.getElementById('statPending').textContent = pending.length;
+        document.getElementById('statCompleted').textContent = completed.length;
+        document.getElementById('statTotal').textContent = data.briefs.length;
+        document.getElementById('statClients').textContent = uniqueClients.size;
+
+        document.getElementById('briefsList').innerHTML = pending.length > 0
+          ? pending.map(renderBrief).join('')
+          : '<div class="empty-state"><h3>Sin briefs pendientes</h3><p>Generá briefs desde la pestaña "Generar Briefs"</p></div>';
+
+        document.getElementById('completedList').innerHTML = completed.length > 0
+          ? completed.map(renderBrief).join('')
+          : '<div class="empty-state"><h3>Sin briefs completados</h3></div>';
+      } catch (err) {
+        console.error('Error loading briefs:', err);
+      }
+    }
+
+    function renderBrief(b) {
+      let requiredAssets = [];
+      try { requiredAssets = JSON.parse(b.required_assets || '{}'); } catch {}
+
+      return `
+        <div class="brief-card">
+          <div class="brief-header">
+            <div>
+              <span class="business-name">${b.business_name}</span>
+              <span class="format-badge ${b.format}">${b.format.toUpperCase()} ${b.dimensions}</span>
+              <span class="status-badge ${b.status}">${b.status === 'pending' ? 'PENDIENTE' : 'COMPLETADO'}</span>
+            </div>
+            <span style="color:#8b8fa3;font-size:0.75rem;">${INDUSTRY_NAMES[b.industry] || b.industry}</span>
+          </div>
+
+          <div class="brief-copy">
+            <div class="copy-headline">${b.headline || 'Sin headline'}</div>
+            <div class="copy-desc">${b.description || 'Sin descripcion'}</div>
+            <span class="copy-cta">${b.cta_text || 'Enviar mensaje'}</span>
+          </div>
+
+          <div class="brief-content">
+            <div class="brief-field"><div class="field-label">Colores</div><div class="field-value">${b.brand_colors || 'No especificado'}</div></div>
+            <div class="brief-field"><div class="field-label">Tipografia</div><div class="field-value">${b.brand_fonts || 'A eleccion'}</div></div>
+            <div class="brief-field"><div class="field-label">Estilo Visual</div><div class="field-value">${b.visual_style || 'Moderno'}</div></div>
+            <div class="brief-field"><div class="field-label">Slogan</div><div class="field-value">${b.slogan || 'No tiene'}</div></div>
+          </div>
+
+          ${b.logo_url ? `<div class="brief-field" style="margin-bottom:12px;"><div class="field-label">Logo</div><div class="field-value"><a href="${b.logo_url}" target="_blank" style="color:#4f6ef7;">${b.logo_url.substring(0,60)}...</a></div></div>` : ''}
+          ${b.creative_notes ? `<div class="brief-field" style="margin-bottom:12px;"><div class="field-label">Notas del Cliente</div><div class="field-value">${b.creative_notes}</div></div>` : ''}
+
+          ${requiredAssets.required ? `
+          <div class="assets-section">
+            <h4>Assets del Cliente</h4>
+            <div class="asset-checklist">
+              ${(requiredAssets.required || []).map(a =>
+                `<span class="asset-item ${a.uploaded ? 'uploaded' : 'missing'}">${a.uploaded ? '&#10003;' : '&#10007;'} ${a.label}</span>`
+              ).join('')}
+            </div>
+            ${requiredAssets.tips ? `<p style="color:#facc15;font-size:0.75rem;margin-top:8px;">Tip: ${requiredAssets.tips}</p>` : ''}
+          </div>` : ''}
+
+          ${b.status === 'pending' ? `
+          <div class="brief-actions">
+            <input type="text" class="complete-input" id="url-${b.id}" placeholder="URL del creativo terminado (Google Drive, Canva, etc.)">
+            <button class="btn btn-complete" onclick="completeBrief('${b.id}')">Marcar Completado</button>
+          </div>` : `
+          <div class="brief-field" style="margin-top:12px;">
+            <div class="field-label">Creativo Final</div>
+            <div class="field-value"><a href="${b.output_url}" target="_blank" style="color:#4ade80;">${b.output_url}</a></div>
+          </div>`}
+        </div>`;
+    }
+
+    async function completeBrief(briefId) {
+      const url = document.getElementById('url-' + briefId).value.trim();
+      if (!url) { alert('Pega la URL del creativo terminado'); return; }
+
+      const res = await fetch('/api/creatives/briefs/' + briefId + '/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ output_url: url }),
+      });
+      const data = await res.json();
+      if (data.success) loadBriefs();
+      else alert('Error: ' + (data.error || 'desconocido'));
+    }
+
+    async function loadTemplates() {
+      try {
+        const res = await fetch('/api/creatives/templates');
+        const data = await res.json();
+
+        document.getElementById('templatesList').innerHTML = data.templates.map(t => `
+          <div class="template-card">
+            <h3>
+              <span class="format-badge ${t.format}">${t.format.toUpperCase()}</span>
+              ${t.name}
+            </h3>
+            <div class="template-preview">
+              <div class="template-mockup ${t.format}">
+                ${t.zones.map((z, i) => {
+                  const positions = {
+                    'top-left': 'top:8px;left:8px;width:30%;height:15%',
+                    'top-center': 'top:8px;left:35%;width:30%;height:12%',
+                    'center': 'top:20%;left:5%;width:90%;height:50%',
+                    'bottom-overlay': 'bottom:20%;left:5%;width:90%;height:15%',
+                    'bottom-right': 'bottom:5%;right:8px;width:35%;height:10%',
+                    'bottom-bar': 'bottom:0;left:0;width:100%;height:10%',
+                    'upper-third': 'top:15%;left:5%;width:90%;height:20%',
+                    'bottom': 'bottom:0;left:0;width:100%;height:20%',
+                    'full': 'top:5%;left:5%;width:90%;height:90%',
+                  };
+                  const pos = positions[z.position] || 'top:5%;left:5%;width:90%;height:20%';
+                  return `<div class="zone" style="${pos}">${z.name}</div>`;
+                }).join('')}
+              </div>
+              <div class="template-specs">
+                <div class="spec-row"><span class="spec-label">Dimensiones</span><span class="spec-value">${t.dimensions}px</span></div>
+                <div class="spec-row"><span class="spec-label">Ratio</span><span class="spec-value">${t.ratio}</span></div>
+                ${t.slidesRecommended ? `<div class="spec-row"><span class="spec-label">Slides</span><span class="spec-value">${t.slidesRecommended} recomendados</span></div>` : ''}
+                <div class="spec-row"><span class="spec-label">Safe Zone</span><span class="spec-value">${t.safeZone.top}px arriba, ${t.safeZone.bottom}px abajo</span></div>
+
+                <div class="tips-box">
+                  <h4>Zonas del Template</h4>
+                  <ul>
+                    ${t.zones.map(z => `<li><strong>${z.name}</strong> (${z.position}): ${z.notes}</li>`).join('')}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Error loading templates:', err);
+      }
+    }
+
+    async function loadClients() {
+      try {
+        const res = await fetch('/api/clients');
+        const data = await res.json();
+        const select = document.getElementById('clientSelect');
+        select.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+          data.clients.map(c =>
+            `<option value="${c.id}">${c.business_name} (${INDUSTRY_NAMES[c.industry] || c.industry}) — ${c.status}</option>`
+          ).join('');
+      } catch (err) {
+        console.error('Error loading clients:', err);
+      }
+    }
+
+    async function generateBriefs() {
+      const clientId = document.getElementById('clientSelect').value;
+      if (!clientId) { alert('Seleccioná un cliente'); return; }
+
+      try {
+        const res = await fetch('/api/creatives/generate-briefs/' + clientId, { method: 'POST' });
+        const data = await res.json();
+        const resultDiv = document.getElementById('generateResult');
+
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div style="background:#0d3320;border:1px solid #1a5c38;padding:16px;border-radius:10px;margin-top:12px;">
+              <p style="color:#4ade80;font-weight:600;">Se generaron ${data.briefsGenerated} briefs creativos.</p>
+              <p style="color:#8b8fa3;font-size:0.85rem;margin-top:4px;">${data.message}</p>
+              ${data.missingAssets.length > 0 ? `
+                <p style="color:#facc15;font-size:0.85rem;margin-top:8px;">Assets faltantes: ${data.missingAssets.join(', ')}</p>
+              ` : ''}
+            </div>`;
+          loadBriefs();
+        } else {
+          resultDiv.innerHTML = `<div style="background:#2d1515;border:1px solid #5a2020;padding:16px;border-radius:10px;margin-top:12px;color:#ff6b6b;">${data.error}</div>`;
+        }
+      } catch (err) {
+        document.getElementById('generateResult').innerHTML = `<div style="background:#2d1515;padding:16px;border-radius:10px;margin-top:12px;color:#ff6b6b;">Error de conexion</div>`;
+      }
+    }
+
+    loadAll();
+  </script>
+</body>
+</html>

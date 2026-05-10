@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: vortis-mvp
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ANTHROPIC_MODEL
+        value: claude-haiku-4-5
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_AD_ACCOUNT_ID
+        sync: false
+      - key: META_PAGE_ID
+        sync: false
+      - key: META_APP_ID
+        sync: false
+      - key: META_BUSINESS_ID
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_UPLOAD_PRESET
+        sync: false
+      - key: APP_URL
+        sync: false
+    # NOTA: Disco persistente requiere plan paid ($7/mo)
+    # En free tier, la base SQLite se resetea cada redeploy
+    # Para produccion: usar Postgres externo (Neon/Supabase gratis)
+

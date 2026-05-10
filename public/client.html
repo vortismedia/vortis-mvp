@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Mi Campaña</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+
+    .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; letter-spacing: 1px; }
+    .header .nav-links { display: flex; gap: 16px; }
+    .header .nav-links a { color: #4f6ef7; text-decoration: none; font-size: 0.85rem; }
+
+    .main { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+
+    /* Lookup */
+    .lookup { background: #141832; border: 1px solid #1e2345; border-radius: 16px; padding: 48px; text-align: center; }
+    .lookup h2 { color: #fff; margin-bottom: 8px; font-size: 1.5rem; }
+    .lookup p { color: #8b8fa3; margin-bottom: 24px; font-size: 0.9rem; }
+    .lookup-form { display: flex; gap: 12px; max-width: 500px; margin: 0 auto; }
+    .lookup-form input { flex: 1; padding: 14px 18px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; color: #fff; font-size: 1rem; }
+    .lookup-form input:focus { outline: none; border-color: #4f6ef7; }
+    .lookup-form button { padding: 14px 28px; background: linear-gradient(135deg, #4f6ef7, #3b5de7); border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+    .lookup-form button:hover { box-shadow: 0 4px 20px rgba(79,110,247,0.3); }
+
+    /* Campaign View */
+    .campaign-view { display: none; }
+
+    /* Status */
+    .status-banner { background: linear-gradient(135deg, #141832, #1a1f45); border: 1px solid #2a2f52; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
+    .status-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; }
+    .status-icon.generating { background: #2d2a0d; }
+    .status-icon.ready { background: #0d3320; }
+    .status-icon.active { background: #0d3320; }
+    .status-icon.deployed { background: #0d1a33; }
+    .status-info h2 { color: #fff; font-size: 1.3rem; }
+    .status-info p { color: #8b8fa3; font-size: 0.9rem; margin-top: 4px; }
+    .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: auto; flex-shrink: 0; }
+    .status-badge.ready { background: #0d3320; color: #4ade80; }
+    .status-badge.active { background: #0d3320; color: #4ade80; }
+    .status-badge.generating { background: #2d2a0d; color: #facc15; }
+    .status-badge.deployed { background: #0d1a33; color: #60a5fa; }
+
+    /* Metrics */
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .metric { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; text-align: center; transition: transform 0.15s, border-color 0.15s; cursor: default; }
+    .metric:hover { transform: translateY(-2px); border-color: #4f6ef7; }
+    .metric .icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .metric .num { font-size: 2rem; font-weight: 700; color: #fff; }
+    .metric .lbl { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+    .metric .sub { font-size: 0.75rem; color: #4f6ef7; margin-top: 4px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #141832; border-radius: 12px; padding: 4px; border: 1px solid #1e2345; }
+    .tab { flex: 1; padding: 12px 16px; text-align: center; border-radius: 8px; font-size: 0.85rem; font-weight: 500; color: #8b8fa3; cursor: pointer; transition: all 0.2s; }
+    .tab:hover { color: #b0b4cc; }
+    .tab.active { background: #4f6ef7; color: #fff; }
+
+    /* Sections */
+    .section { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+    .section h3 { color: #fff; margin-bottom: 16px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+    .section h3 .badge { background: #4f6ef7; color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Ads */
+    .ad-preview { background: #0d1025; border: 1px solid #2a2f52; border-radius: 12px; padding: 20px; margin-bottom: 14px; transition: border-color 0.2s; }
+    .ad-preview:hover { border-color: #4f6ef7; }
+    .ad-preview .ad-label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .ad-preview .ad-head { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .ad-preview .ad-desc { font-size: 0.85rem; color: #b0b4cc; line-height: 1.6; margin-bottom: 12px; }
+    .ad-preview .ad-footer { display: flex; justify-content: space-between; align-items: center; }
+    .ad-preview .ad-cta { display: inline-block; padding: 8px 20px; background: #4f6ef7; color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: 500; }
+    .ad-status { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .ad-status.approved { background: #0d3320; color: #4ade80; }
+    .ad-status.rejected { background: #2d1515; color: #ff6b6b; }
+
+    /* Targeting */
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .info-item { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 16px; }
+    .info-item .info-label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .info-item .info-value { font-size: 0.95rem; color: #fff; }
+
+    /* Chat */
+    .chat-container { background: #0d1025; border: 1px solid #2a2f52; border-radius: 14px; overflow: hidden; }
+    .chat-header { background: #141832; padding: 16px 20px; border-bottom: 1px solid #2a2f52; display: flex; align-items: center; gap: 12px; }
+    .chat-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #4f6ef7, #3b5de7); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .chat-header-info h4 { color: #fff; font-size: 0.9rem; }
+    .chat-header-info p { color: #4ade80; font-size: 0.75rem; }
+    .chat-messages { height: 400px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+    .chat-msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; line-height: 1.6; }
+    .chat-msg.bot { background: #141832; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 4px; }
+    .chat-msg.user { background: #4f6ef7; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .chat-msg .msg-time { font-size: 0.65rem; color: #8b8fa3; margin-top: 6px; }
+    .chat-msg.bot .msg-time { color: #8b8fa3; }
+    .chat-msg.user .msg-time { color: rgba(255,255,255,0.6); }
+    .chat-recs { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2f52; }
+    .chat-rec { font-size: 0.8rem; color: #8fa4ff; padding: 4px 0; }
+    .chat-rec::before { content: '💡 '; }
+    .chat-input-area { display: flex; gap: 8px; padding: 16px; border-top: 1px solid #2a2f52; background: #141832; }
+    .chat-input-area input { flex: 1; padding: 12px 16px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; color: #fff; font-size: 0.9rem; }
+    .chat-input-area input:focus { outline: none; border-color: #4f6ef7; }
+    .chat-input-area button { padding: 12px 24px; background: #4f6ef7; border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; }
+    .chat-input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; }
+    .chat-suggestion { padding: 6px 14px; background: #1a1f45; border: 1px solid #2a2f52; border-radius: 20px; color: #b0b4cc; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .chat-suggestion:hover { border-color: #4f6ef7; color: #fff; }
+    .typing-indicator { display: none; align-self: flex-start; padding: 12px 16px; background: #141832; border-radius: 12px; }
+    .typing-indicator span { display: inline-block; width: 6px; height: 6px; background: #8b8fa3; border-radius: 50%; margin: 0 2px; animation: typing 1.2s infinite; }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+
+    /* Budget visualization */
+    .budget-bar { background: #0d1025; border-radius: 8px; height: 32px; position: relative; overflow: hidden; margin: 8px 0; }
+    .budget-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff; transition: width 0.5s; }
+    .budget-fill.fee { background: linear-gradient(90deg, #4f6ef7, #3b5de7); }
+    .budget-fill.ads { background: linear-gradient(90deg, #0d9f4f, #0a7f3f); }
+
+    .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px 16px; border-radius: 8px; color: #ff6b6b; font-size: 0.9rem; text-align: center; margin-top: 16px; }
+
+    @media (max-width: 768px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .info-grid { grid-template-columns: 1fr; }
+      .tabs { flex-wrap: wrap; }
+      .status-banner { flex-direction: column; text-align: center; }
+      .status-badge { margin-left: 0; }
+    }
+    @media (max-width: 480px) {
+      .lookup-form { flex-direction: column; }
+      .chat-messages { height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>VORTIS MEDIA</h1>
+    <div class="nav-links">
+      <a href="/">Nuevo Onboarding</a>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Lookup -->
+    <div id="lookupSection" class="lookup">
+      <h2>Tu Campaña Inteligente</h2>
+      <p>Ingresá tu ID de cliente para acceder a tu dashboard personalizado.</p>
+      <div class="lookup-form">
+        <input type="text" id="clientIdInput" placeholder="Pegá tu ID acá">
+        <button onclick="lookupCampaign()">Acceder</button>
+      </div>
+      <div id="lookupError"></div>
+    </div>
+
+    <!-- Campaign View -->
+    <div id="campaignView" class="campaign-view">
+      <!-- Status Banner -->
+      <div class="status-banner">
+        <div class="status-icon" id="statusIcon">⏳</div>
+        <div class="status-info">
+          <h2 id="businessName">-</h2>
+          <p id="statusText">Cargando...</p>
+        </div>
+        <span class="status-badge generating" id="statusBadge">CARGANDO</span>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics">
+        <div class="metric">
+          <div class="icon">👁</div>
+          <div class="num" id="metricImpressions">-</div>
+          <div class="lbl">Impresiones</div>
+          <div class="sub" id="metricCPM"></div>
+        </div>
+        <div class="metric">
+          <div class="icon">👆</div>
+          <div class="num" id="metricClicks">-</div>
+          <div class="lbl">Clicks</div>
+          <div class="sub" id="metricCTR"></div>
+        </div>
+        <div class="metric">
+          <div class="icon">💬</div>
+          <div class="num" id="metricMessages">-</div>
+          <div class="lbl">Mensajes</div>
+          <div class="sub" id="metricCostPerMsg"></div>
+        </div>
+        <div class="metric">
+          <div class="icon">💰</div>
+          <div class="num" id="metricSpend">-</div>
+          <div class="lbl">Invertido</div>
+          <div class="sub" id="metricBudgetLeft"></div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" onclick="showTab('chat')">💬 Consultor IA</div>
+        <div class="tab" onclick="showTab('ads')">📝 Anuncios</div>
+        <div class="tab" onclick="showTab('targeting')">🎯 Segmentación</div>
+        <div class="tab" onclick="showTab('budget')">📊 Presupuesto</div>
+      </div>
+
+      <!-- Chat Tab -->
+      <div id="tab-chat" class="tab-content active">
+        <div class="chat-container">
+          <div class="chat-header">
+            <div class="chat-avatar">🤖</div>
+            <div class="chat-header-info">
+              <h4>Consultor Vortis IA</h4>
+              <p>En línea</p>
+            </div>
+          </div>
+          <div class="chat-messages" id="chatMessages">
+            <div class="chat-msg bot">
+              ¡Hola! Soy tu consultor de campaña. Preguntame lo que quieras sobre tu publicidad: presupuesto, métricas, segmentación, horarios, o cualquier duda.
+              <div class="msg-time">Ahora</div>
+            </div>
+          </div>
+          <div class="chat-suggestions">
+            <span class="chat-suggestion" onclick="askQuestion('¿Cómo van mis resultados?')">📊 Mis resultados</span>
+            <span class="chat-suggestion" onclick="askQuestion('¿Qué pasa si aumento el presupuesto 30%?')">💰 Subir presupuesto</span>
+            <span class="chat-suggestion" onclick="askQuestion('¿Cuál es el mejor horario?')">🕐 Mejor horario</span>
+            <span class="chat-suggestion" onclick="askQuestion('¿A quién le estamos mostrando los anuncios?')">🎯 Mi audiencia</span>
+            <span class="chat-suggestion" onclick="askQuestion('¿Cómo están mis anuncios?')">📝 Mis anuncios</span>
+          </div>
+          <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Escribí tu pregunta..." onkeypress="if(event.key==='Enter')sendChat()">
+            <button onclick="sendChat()" id="chatSendBtn">Enviar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ads Tab -->
+      <div id="tab-ads" class="tab-content">
+        <div class="section" style="border:none;padding:0;background:none;">
+          <h3>Tus Anuncios <span class="badge" id="adsCount">0</span></h3>
+          <div id="adsContainer"><p style="color:#8b8fa3;">Cargando anuncios...</p></div>
+        </div>
+      </div>
+
+      <!-- Targeting Tab -->
+      <div id="tab-targeting" class="tab-content">
+        <div class="section" style="border:none;padding:0;background:none;">
+          <h3>Segmentación de tu Campaña</h3>
+          <div class="info-grid" id="targetingGrid"></div>
+        </div>
+      </div>
+
+      <!-- Budget Tab -->
+      <div id="tab-budget" class="tab-content">
+        <div class="section" style="border:none;padding:0;background:none;">
+          <h3>Tu Inversión</h3>
+          <div id="budgetDetails"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let _clientId = null;
+    let _clientData = null;
+
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('id');
+    if (urlId) { document.getElementById('clientIdInput').value = urlId; lookupCampaign(); }
+
+    async function lookupCampaign() {
+      _clientId = document.getElementById('clientIdInput').value.trim();
+      if (!_clientId) return;
+      document.getElementById('lookupError').innerHTML = '';
+      try {
+        const res = await fetch('/api/clients/' + _clientId);
+        if (!res.ok) throw new Error();
+        _clientData = await res.json();
+        document.getElementById('lookupSection').style.display = 'none';
+        document.getElementById('campaignView').style.display = 'block';
+        renderAll(_clientData);
+      } catch {
+        document.getElementById('lookupError').innerHTML = '<div class="error-msg">No se encontró una campaña con ese ID.</div>';
+      }
+    }
+
+    function renderAll(data) {
+      const c = data.client;
+      const campaign = data.campaigns?.[0];
+      const ads = data.ads || [];
+
+      // Status
+      document.getElementById('businessName').textContent = c.business_name;
+      const sm = {
+        onboarding: { icon: '📋', text: 'Registro recibido', badge: 'REGISTRADO', cls: 'generating' },
+        processing: { icon: '⚙️', text: 'Nuestra IA está generando tu campaña...', badge: 'PROCESANDO', cls: 'generating' },
+        campaign_ready: { icon: '✅', text: 'Tu campaña está lista para revisión', badge: 'LISTA', cls: 'ready' },
+        deployed: { icon: '🚀', text: 'Campaña desplegada en Meta Ads', badge: 'DESPLEGADA', cls: 'deployed' },
+        active: { icon: '📊', text: 'Tu campaña está activa y generando resultados', badge: 'ACTIVA', cls: 'active' },
+      };
+      const s = sm[c.status] || sm.onboarding;
+      document.getElementById('statusIcon').textContent = s.icon;
+      document.getElementById('statusIcon').className = 'status-icon ' + s.cls;
+      document.getElementById('statusText').textContent = s.text;
+      document.getElementById('statusBadge').textContent = s.badge;
+      document.getElementById('statusBadge').className = 'status-badge ' + s.cls;
+
+      // Metrics
+      let ti = 0, tc = 0, tm = 0, ts = 0;
+      ads.forEach(a => { ti += a.impressions||0; tc += a.clicks||0; tm += a.messages||0; ts += a.spend_usd||0; });
+      document.getElementById('metricImpressions').textContent = ti.toLocaleString();
+      document.getElementById('metricClicks').textContent = tc.toLocaleString();
+      document.getElementById('metricMessages').textContent = tm.toLocaleString();
+      document.getElementById('metricSpend').textContent = '$' + ts.toFixed(2);
+
+      const ctr = ti > 0 ? ((tc/ti)*100).toFixed(2) + '% CTR' : 'Sin datos aún';
+      const cpm = ti > 0 ? 'CPM $' + ((ts/ti)*1000).toFixed(2) : '';
+      const cpmsg = tm > 0 ? '$' + (ts/tm).toFixed(2) + '/msg' : 'Sin datos aún';
+      const left = 200 - ts;
+      document.getElementById('metricCTR').textContent = ctr;
+      document.getElementById('metricCPM').textContent = cpm;
+      document.getElementById('metricCostPerMsg').textContent = cpmsg;
+      document.getElementById('metricBudgetLeft').textContent = left > 0 ? '$' + left.toFixed(0) + ' restante' : '';
+
+      // Ads
+      document.getElementById('adsCount').textContent = ads.length;
+      const variants = { beneficio_directo: 'Beneficio Directo', problema_dolor: 'Problema / Dolor', urgencia: 'Urgencia', prueba_social: 'Prueba Social', emocional: 'Emocional' };
+      document.getElementById('adsContainer').innerHTML = ads.length > 0
+        ? ads.map((a, i) => `
+          <div class="ad-preview">
+            <div class="ad-label">Variante ${i+1}</div>
+            <div class="ad-head">${a.headline}</div>
+            <div class="ad-desc">${a.description}</div>
+            <div class="ad-footer">
+              <span class="ad-cta">${a.cta_text}</span>
+              <span class="ad-status ${a.validation_status}">${a.validation_status === 'approved' ? '✓ Aprobado' : '✗ Rechazado'}</span>
+            </div>
+          </div>`).join('')
+        : '<p style="color:#8b8fa3;">Los anuncios se están generando...</p>';
+
+      // Targeting
+      if (campaign?.targeting_config) {
+        let tgt; try { tgt = JSON.parse(campaign.targeting_config); } catch { tgt = {}; }
+        const age = tgt.age_range || {};
+        const cities = tgt.geo_locations?.cities || [];
+        const interests = tgt.interests || [];
+        const placements = tgt.placements || [];
+        document.getElementById('targetingGrid').innerHTML = `
+          <div class="info-item"><div class="info-label">📍 Ubicación</div><div class="info-value">${cities.map(c => c.name || c.city || 'Tu ciudad').join(', ')} (${cities[0]?.radius || 25} km)</div></div>
+          <div class="info-item"><div class="info-label">👤 Edad</div><div class="info-value">${age.min || 25} - ${age.max || 55} años</div></div>
+          <div class="info-item"><div class="info-label">⚧ Género</div><div class="info-value">${tgt.genders === 'todos' || !tgt.genders ? 'Todos' : tgt.genders}</div></div>
+          <div class="info-item"><div class="info-label">🌐 Idioma</div><div class="info-value">${(tgt.locales || ['Español']).join(', ')}</div></div>
+          <div class="info-item"><div class="info-label">❤️ Intereses</div><div class="info-value">${Array.isArray(interests) ? interests.map(i => typeof i === 'string' ? i : i.name).join(', ') : 'Definidos por IA'}</div></div>
+          <div class="info-item"><div class="info-label">📱 Plataformas</div><div class="info-value">${placements.map(p => p.replace('_', ' ').replace(/(^\w)/g, m => m.toUpperCase())).join(', ') || 'Facebook, Instagram'}</div></div>
+        `;
+      }
+
+      // Budget
+      if (campaign?.budget_config) {
+        let b; try { b = JSON.parse(campaign.budget_config); } catch { b = {}; }
+        const est = b.estimated_results || {};
+        document.getElementById('budgetDetails').innerHTML = `
+          <div style="margin-bottom:24px;">
+            <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Tu inversión mensual de $299 USD:</p>
+            <div class="budget-bar">
+              <div class="budget-fill fee" style="width:33%;">$99 servicio</div>
+            </div>
+            <div class="budget-bar">
+              <div class="budget-fill ads" style="width:67%;">$200 publicidad</div>
+            </div>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">💵 Presupuesto Diario</div><div class="info-value">$${b.daily_budget_usd || 6.67} USD</div></div>
+            <div class="info-item"><div class="info-label">📅 Duración</div><div class="info-value">${b.recommended_duration_days || 30} días</div></div>
+            <div class="info-item"><div class="info-label">👁 Impresiones Est.</div><div class="info-value">${est.impressions ? est.impressions.min?.toLocaleString() + ' - ' + est.impressions.max?.toLocaleString() : '—'}</div></div>
+            <div class="info-item"><div class="info-label">👆 Clicks Est.</div><div class="info-value">${est.clicks ? est.clicks.min?.toLocaleString() + ' - ' + est.clicks.max?.toLocaleString() : '—'}</div></div>
+            <div class="info-item"><div class="info-label">💬 Mensajes Est.</div><div class="info-value">${est.messages ? est.messages.min?.toLocaleString() + ' - ' + est.messages.max?.toLocaleString() : '—'}</div></div>
+            <div class="info-item"><div class="info-label">📈 CPM Estimado</div><div class="info-value">$${b.benchmarks?.estimated_cpm || '—'} USD</div></div>
+          </div>
+        `;
+      }
+    }
+
+    // Tabs
+    function showTab(name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + name).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Chat
+    function askQuestion(q) {
+      document.getElementById('chatInput').value = q;
+      sendChat();
+    }
+
+    async function sendChat() {
+      const input = document.getElementById('chatInput');
+      const q = input.value.trim();
+      if (!q || !_clientId) return;
+
+      input.value = '';
+      addChatMsg(q, 'user');
+      document.getElementById('chatSendBtn').disabled = true;
+
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.style.display = 'flex';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      document.getElementById('chatMessages').appendChild(typing);
+      scrollChat();
+
+      try {
+        const res = await fetch('/api/consultant/' + _clientId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ question: q }),
+        });
+        const data = await res.json();
+        typing.remove();
+
+        if (data.success) {
+          let html = data.answer.replace(/\n/g, '<br>');
+          if (data.recommendations?.length) {
+            html += '<div class="chat-recs">';
+            data.recommendations.forEach(r => { html += '<div class="chat-rec">' + r + '</div>'; });
+            html += '</div>';
+          }
+          addChatMsg(html, 'bot', true);
+        } else {
+          addChatMsg('Disculpá, hubo un error. Intentá de nuevo.', 'bot');
+        }
+      } catch {
+        typing.remove();
+        addChatMsg('Error de conexión. Intentá de nuevo.', 'bot');
+      }
+      document.getElementById('chatSendBtn').disabled = false;
+    }
+
+    function addChatMsg(text, type, isHtml) {
+      const div = document.createElement('div');
+      div.className = 'chat-msg ' + type;
+      const time = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      if (isHtml) {
+        div.innerHTML = text + '<div class="msg-time">' + time + '</div>';
+      } else {
+        div.textContent = text;
+        const t = document.createElement('div');
+        t.className = 'msg-time';
+        t.textContent = time;
+        div.appendChild(t);
+      }
+      document.getElementById('chatMessages').appendChild(div);
+      scrollChat();
+    }
+
+    function scrollChat() {
+      const c = document.getElementById('chatMessages');
+      c.scrollTop = c.scrollHeight;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Admin Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; letter-spacing: 1px; }
+    .header a { color: #4f6ef7; text-decoration: none; font-size: 0.85rem; }
+    .main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .stat-card { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 20px; }
+    .stat-card .label { font-size: 0.8rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; color: #fff; margin-top: 4px; }
+    .stat-card .sub { font-size: 0.8rem; color: #8b8fa3; margin-top: 4px; }
+
+    .section { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .section h2 { font-size: 1.1rem; color: #fff; margin-bottom: 16px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 0.75rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 12px; border-bottom: 1px solid #1e2345; }
+    td { padding: 12px; border-bottom: 1px solid #1e2345; font-size: 0.9rem; }
+    tr:hover { background: #1a1f3d; }
+
+    .status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .status-ready, .status-campaign_ready { background: #0d3320; color: #4ade80; }
+    .status-processing, .status-generating { background: #2d2a0d; color: #facc15; }
+    .status-error { background: #2d1515; color: #ff6b6b; }
+    .status-onboarding, .status-pending { background: #0d1a33; color: #60a5fa; }
+
+    .btn { padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+    .btn-primary { background: #4f6ef7; color: #fff; }
+    .btn-secondary { background: #2a2f52; color: #b0b4cc; }
+    .btn:hover { opacity: 0.9; }
+
+    .detail-panel { background: #0d1025; border: 1px solid #2a2f52; border-radius: 12px; padding: 24px; margin-top: 16px; display: none; }
+    .detail-panel h3 { color: #8fa4ff; margin-bottom: 12px; }
+    .detail-panel pre { background: #080b1a; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; color: #b0b4cc; max-height: 400px; overflow-y: auto; }
+
+    .ad-card { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .ad-card .ad-headline { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 6px; }
+    .ad-card .ad-body { font-size: 0.85rem; color: #b0b4cc; line-height: 1.5; margin-bottom: 8px; }
+    .ad-card .ad-cta { display: inline-block; padding: 6px 16px; background: #4f6ef7; color: #fff; border-radius: 6px; font-size: 0.8rem; }
+    .ad-card .ad-meta { font-size: 0.75rem; color: #8b8fa3; margin-top: 8px; }
+
+    .loading { text-align: center; padding: 40px; color: #8b8fa3; }
+
+    .meta-actions { display: flex; gap: 10px; margin: 16px 0; flex-wrap: wrap; }
+    .btn-deploy { background: #4f6ef7; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .btn-activate { background: #0d9f4f; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .btn-pause { background: #d97706; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
+    .btn-deploy:hover, .btn-activate:hover, .btn-pause:hover { opacity: 0.85; }
+    .btn-deploy:disabled, .btn-activate:disabled, .btn-pause:disabled { opacity: 0.5; cursor: not-allowed; }
+    .meta-status-label { display: inline-block; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .meta-status-label.PAUSED { background: #2d2a0d; color: #facc15; }
+    .meta-status-label.ACTIVE { background: #0d3320; color: #4ade80; }
+    .meta-status-label.none { background: #1e2345; color: #8b8fa3; }
+    .action-result { margin-top: 10px; padding: 10px; border-radius: 8px; font-size: 0.85rem; }
+    .action-result.success { background: #0d3320; color: #4ade80; }
+    .action-result.error { background: #2d1515; color: #ff6b6b; }
+
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>VORTIS MEDIA &mdash; Admin</h1>
+    <a href="/">Formulario de Onboarding</a>
+  </div>
+
+  <div class="main">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="label">Clientes</div><div class="value" id="statClients">-</div></div>
+      <div class="stat-card"><div class="label">Campanas</div><div class="value" id="statCampaigns">-</div></div>
+      <div class="stat-card"><div class="label">Anuncios</div><div class="value" id="statAds">-</div><div class="sub" id="statAdsApproved"></div></div>
+      <div class="stat-card"><div class="label">Tokens IA</div><div class="value" id="statTokens">-</div><div class="sub" id="statTokensCost"></div></div>
+    </div>
+
+    <div class="section">
+      <h2>Clientes Recientes</h2>
+      <table>
+        <thead>
+          <tr><th>Negocio</th><th>Rubro</th><th>Ciudad</th><th>Estado</th><th>Fecha</th><th></th></tr>
+        </thead>
+        <tbody id="clientsTable">
+          <tr><td colspan="6" class="loading">Cargando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section" id="detailSection" style="display:none;">
+      <h2 id="detailTitle">Detalle</h2>
+
+      <div id="metaActionsPanel" class="meta-actions" style="display:none;">
+        <span class="meta-status-label none" id="metaStatusLabel">Sin desplegar</span>
+        <button class="btn-deploy" id="btnDeploy" onclick="deployToMeta()">Desplegar en Meta</button>
+        <button class="btn-activate" id="btnActivate" onclick="activateCampaign()" style="display:none;">Activar</button>
+        <button class="btn-pause" id="btnPause" onclick="pauseCampaign()" style="display:none;">Pausar</button>
+        <div id="actionResult"></div>
+      </div>
+
+      <div id="adsContainer"></div>
+
+      <div class="detail-panel" id="analysisPanel" style="display:block; margin-top:16px;">
+        <h3>Analisis del Negocio</h3>
+        <pre id="analysisContent"></pre>
+      </div>
+
+      <div class="detail-panel" id="targetingPanel" style="display:block; margin-top:16px;">
+        <h3>Segmentacion</h3>
+        <pre id="targetingContent"></pre>
+      </div>
+
+      <div class="detail-panel" id="budgetPanel" style="display:block; margin-top:16px;">
+        <h3>Presupuesto</h3>
+        <pre id="budgetContent"></pre>
+      </div>
+
+      <div class="detail-panel" id="logsPanel" style="display:block; margin-top:16px;">
+        <h3>Logs de Agentes</h3>
+        <div id="logsContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+        document.getElementById('statClients').textContent = data.stats.totalClients;
+        document.getElementById('statCampaigns').textContent = data.stats.totalCampaigns;
+        document.getElementById('statAds').textContent = data.stats.totalAds;
+        document.getElementById('statAdsApproved').textContent = data.stats.approvedAds + ' aprobados';
+        document.getElementById('statTokens').textContent = (data.stats.totalTokens / 1000).toFixed(1) + 'k';
+        document.getElementById('statTokensCost').textContent = '~$' + data.stats.estimatedTokenCostUsd + ' USD';
+
+        const tbody = document.getElementById('clientsTable');
+        if (data.recentClients.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="loading">No hay clientes aun. Usa el formulario de onboarding para crear el primero.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.recentClients.map(c => `
+          <tr>
+            <td><strong>${c.business_name}</strong></td>
+            <td>${c.industry}</td>
+            <td>${c.city}</td>
+            <td><span class="status status-${c.status}">${c.status}</span></td>
+            <td>${new Date(c.created_at).toLocaleDateString()}</td>
+            <td><button class="btn btn-primary" onclick="loadClient('${c.id}')">Ver</button></td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error('Dashboard error:', err);
+      }
+    }
+
+    async function loadClient(clientId) {
+      try {
+        const res = await fetch('/api/clients/' + clientId);
+        const data = await res.json();
+        const section = document.getElementById('detailSection');
+        section.style.display = 'block';
+        document.getElementById('detailTitle').textContent = data.client.business_name + ' - Detalle';
+
+        // Show ads
+        const adsHtml = data.ads.map(ad => `
+          <div class="ad-card">
+            <div class="ad-headline">${ad.headline}</div>
+            <div class="ad-body">${ad.description}</div>
+            <div class="ad-cta">${ad.cta_text}</div>
+            <div class="ad-meta">
+              Estado: <span class="status status-${ad.validation_status === 'approved' ? 'ready' : 'error'}">${ad.validation_status}</span>
+              ${ad.validation_notes ? ' | ' + ad.validation_notes : ''}
+            </div>
+          </div>
+        `).join('');
+        document.getElementById('adsContainer').innerHTML = data.ads.length > 0
+          ? '<h3 style="color:#8fa4ff;margin-bottom:12px;">Anuncios Generados (' + data.ads.length + ')</h3>' + adsHtml
+          : '<p style="color:#8b8fa3;">Anuncios en generacion...</p>';
+
+        // Show campaign details
+        if (data.campaigns.length > 0) {
+          const campaign = data.campaigns[0];
+          let analysis = campaign.business_analysis;
+          let targeting = campaign.targeting_config;
+          let budget = campaign.budget_config;
+          try { analysis = JSON.parse(analysis); } catch {}
+          try { targeting = JSON.parse(targeting); } catch {}
+          try { budget = JSON.parse(budget); } catch {}
+
+          document.getElementById('analysisContent').textContent = JSON.stringify(analysis, null, 2) || 'Generando...';
+          document.getElementById('targetingContent').textContent = JSON.stringify(targeting, null, 2) || 'Generando...';
+          document.getElementById('budgetContent').textContent = JSON.stringify(budget, null, 2) || 'Generando...';
+
+          // Load logs
+          const logsRes = await fetch('/api/campaigns/' + campaign.id + '/logs');
+          const logsData = await logsRes.json();
+          document.getElementById('logsContent').innerHTML = logsData.logs.map(l => `
+            <div style="padding:8px 0;border-bottom:1px solid #1e2345;font-size:0.85rem;">
+              <strong>${l.agent_name}</strong> - ${l.status}
+              | ${l.tokens_used} tokens | ${l.duration_ms}ms
+              ${l.error_message ? '<br><span style="color:#ff6b6b;">' + l.error_message + '</span>' : ''}
+            </div>
+          `).join('') || '<p style="color:#8b8fa3;">Sin logs aun</p>';
+        }
+
+        // Meta actions
+        if (data.campaigns.length > 0) {
+          const campaign = data.campaigns[0];
+          window._currentCampaignId = campaign.id;
+          const panel = document.getElementById('metaActionsPanel');
+          panel.style.display = 'flex';
+
+          const label = document.getElementById('metaStatusLabel');
+          const btnDeploy = document.getElementById('btnDeploy');
+          const btnActivate = document.getElementById('btnActivate');
+          const btnPause = document.getElementById('btnPause');
+
+          if (campaign.meta_campaign_id) {
+            label.textContent = 'Meta: ' + campaign.meta_status;
+            label.className = 'meta-status-label ' + campaign.meta_status;
+            btnDeploy.style.display = 'none';
+            btnActivate.style.display = campaign.meta_status === 'PAUSED' ? 'inline-block' : 'none';
+            btnPause.style.display = campaign.meta_status === 'ACTIVE' ? 'inline-block' : 'none';
+          } else if (campaign.status === 'ready') {
+            label.textContent = 'Listo para desplegar';
+            label.className = 'meta-status-label none';
+            btnDeploy.style.display = 'inline-block';
+            btnActivate.style.display = 'none';
+            btnPause.style.display = 'none';
+          } else {
+            label.textContent = 'Estado: ' + campaign.status;
+            label.className = 'meta-status-label none';
+            btnDeploy.style.display = 'none';
+            btnActivate.style.display = 'none';
+            btnPause.style.display = 'none';
+          }
+          document.getElementById('actionResult').innerHTML = '';
+        }
+
+        section.scrollIntoView({ behavior: 'smooth' });
+      } catch (err) {
+        console.error('Client detail error:', err);
+      }
+    }
+
+    async function deployToMeta() {
+      if (!window._currentCampaignId) return;
+      const btn = document.getElementById('btnDeploy');
+      btn.disabled = true;
+      btn.textContent = 'Desplegando...';
+      try {
+        const res = await fetch('/api/meta/' + window._currentCampaignId + '/deploy', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showResult('Campaña desplegada en Meta (PAUSED). ' + data.adsCreated + ' anuncios creados.', 'success');
+          loadClient(document.querySelector('#clientsTable .btn-primary')?.getAttribute('onclick')?.match(/'([^']+)'/)?.[1]);
+        } else {
+          showResult('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showResult('Error de conexión', 'error');
+      }
+      btn.disabled = false;
+      btn.textContent = 'Desplegar en Meta';
+    }
+
+    async function activateCampaign() {
+      if (!window._currentCampaignId) return;
+      const btn = document.getElementById('btnActivate');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/meta/' + window._currentCampaignId + '/activate', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showResult('Campaña ACTIVADA', 'success');
+          location.reload();
+        } else {
+          showResult('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showResult('Error de conexión', 'error');
+      }
+      btn.disabled = false;
+    }
+
+    async function pauseCampaign() {
+      if (!window._currentCampaignId) return;
+      const btn = document.getElementById('btnPause');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/api/meta/' + window._currentCampaignId + '/pause', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showResult('Campaña PAUSADA', 'success');
+          location.reload();
+        } else {
+          showResult('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showResult('Error de conexión', 'error');
+      }
+      btn.disabled = false;
+    }
+
+    function showResult(msg, type) {
+      document.getElementById('actionResult').innerHTML =
+        '<div class="action-result ' + type + '">' + msg + '</div>';
+    }
+
+    loadDashboard();
+    setInterval(loadDashboard, 10000);
+  </script>
+</body>
+</html>

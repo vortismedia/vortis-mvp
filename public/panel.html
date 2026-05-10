@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Panel Interno</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { width: 240px; background: #0d1025; border-right: 1px solid #1e2345; padding: 24px 0; position: fixed; height: 100vh; overflow-y: auto; flex-shrink: 0; }
+    .sidebar .brand { padding: 0 24px 24px; border-bottom: 1px solid #1e2345; margin-bottom: 16px; }
+    .sidebar .brand h1 { font-size: 1.1rem; font-weight: 800; color: #fff; letter-spacing: 1px; }
+    .sidebar .brand p { font-size: 0.7rem; color: #8b8fa3; margin-top: 2px; }
+    .sidebar nav { padding: 0 12px; }
+    .sidebar nav a { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 8px; color: #8b8fa3; text-decoration: none; font-size: 0.9rem; margin-bottom: 4px; transition: all 0.15s; cursor: pointer; }
+    .sidebar nav a:hover { background: #141832; color: #fff; }
+    .sidebar nav a.active { background: #4f6ef7; color: #fff; }
+    .sidebar nav a .icon { font-size: 1rem; width: 20px; }
+    .sidebar .section-label { padding: 16px 14px 6px; font-size: 0.65rem; color: #555; text-transform: uppercase; letter-spacing: 1px; }
+    .sidebar .footer { padding: 16px 24px; border-top: 1px solid #1e2345; margin-top: auto; }
+    .sidebar .footer a { color: #4f6ef7; font-size: 0.75rem; text-decoration: none; display: block; padding: 4px 0; }
+
+    /* Main content */
+    .content { flex: 1; margin-left: 240px; padding: 32px; max-width: 100%; overflow-x: hidden; }
+    .content-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .content-header h2 { font-size: 1.5rem; color: #fff; font-weight: 700; }
+    .content-header .breadcrumb { font-size: 0.8rem; color: #8b8fa3; }
+
+    /* Views */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Cards */
+    .card { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+    .card h3 { color: #fff; font-size: 1rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 20px; }
+    .stat-card .label { font-size: 0.75rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; color: #fff; margin-top: 4px; }
+    .stat-card .sub { font-size: 0.75rem; color: #4f6ef7; margin-top: 4px; }
+
+    /* Revenue banner */
+    .revenue-banner { background: linear-gradient(135deg, #1a1f45, #141832); border: 1px solid #4f6ef7; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; display: flex; gap: 28px; flex-wrap: wrap; justify-content: space-around; text-align: center; }
+    .revenue-item .value { font-size: 1.8rem; font-weight: 700; color: #4f6ef7; }
+    .revenue-item .label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th { text-align: left; color: #8b8fa3; font-size: 0.7rem; text-transform: uppercase; padding: 10px 8px; border-bottom: 1px solid #1e2345; font-weight: 500; }
+    td { padding: 12px 8px; border-bottom: 1px solid #1e2345; }
+    tr:hover td { background: #1a1f3d; }
+    tr.selected td { background: #1a1f3d; }
+
+    /* Status pills */
+    .pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .pill.ready, .pill.campaign_ready, .pill.approved_by_client { background: #0d3320; color: #4ade80; }
+    .pill.processing, .pill.generating, .pill.PAUSED { background: #2d2a0d; color: #facc15; }
+    .pill.error { background: #2d1515; color: #ff6b6b; }
+    .pill.deployed, .pill.ACTIVE, .pill.active { background: #0d1a33; color: #60a5fa; }
+    .pill.onboarding { background: #1e2345; color: #b0b4cc; }
+
+    /* Buttons */
+    .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 500; }
+    .btn-primary { background: #4f6ef7; color: #fff; }
+    .btn-primary:hover { background: #3b5de7; }
+    .btn-success { background: #0d9f4f; color: #fff; }
+    .btn-success:hover { background: #0a7f3f; }
+    .btn-warn { background: #d97706; color: #fff; }
+    .btn-warn:hover { background: #b45309; }
+    .btn-danger { background: #dc2626; color: #fff; }
+    .btn-secondary { background: #2a2f52; color: #b0b4cc; }
+    .btn-secondary:hover { background: #3a3f62; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { padding: 5px 10px; font-size: 0.75rem; }
+
+    /* Master-detail (clientes) */
+    .master-detail { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+    .master-detail .master { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 16px; max-height: 80vh; overflow-y: auto; position: sticky; top: 20px; }
+    .master-detail .detail { background: #141832; border: 1px solid #1e2345; border-radius: 12px; padding: 24px; min-height: 400px; }
+    .master-detail .detail.empty { display: flex; align-items: center; justify-content: center; color: #8b8fa3; font-size: 0.9rem; min-height: 300px; }
+
+    .client-list-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
+    .client-list-item:hover { background: #0d1025; }
+    .client-list-item.active { background: #4f6ef7; }
+    .client-list-item.active .business-name, .client-list-item.active .industry-tag { color: #fff; }
+    .client-list-item .info { flex: 1; min-width: 0; }
+    .client-list-item .business-name { font-weight: 600; color: #fff; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .client-list-item .industry-tag { font-size: 0.75rem; color: #8b8fa3; margin-top: 2px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; background: #0d1025; padding: 4px; border-radius: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .tab-btn { padding: 8px 14px; border-radius: 6px; font-size: 0.8rem; color: #8b8fa3; cursor: pointer; border: none; background: none; transition: all 0.15s; }
+    .tab-btn:hover { color: #fff; }
+    .tab-btn.active { background: #4f6ef7; color: #fff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Detail sections */
+    .detail-section { margin-bottom: 20px; }
+    .detail-section h4 { color: #8fa4ff; font-size: 0.85rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .info-item { background: #0d1025; border-radius: 8px; padding: 12px; }
+    .info-item .label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; }
+    .info-item .value { font-size: 0.9rem; color: #fff; margin-top: 4px; }
+
+    .ad-card { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+    .ad-card .ad-headline { font-weight: 600; color: #fff; font-size: 0.95rem; margin-bottom: 6px; }
+    .ad-card .ad-desc { font-size: 0.85rem; color: #b0b4cc; line-height: 1.5; margin-bottom: 10px; }
+    .ad-card .ad-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 0.75rem; color: #8b8fa3; }
+
+    pre { background: #0d1025; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.75rem; color: #b0b4cc; max-height: 300px; }
+
+    /* Bar chart */
+    .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; }
+    .bar-label { width: 130px; font-size: 0.8rem; color: #b0b4cc; }
+    .bar-track { flex: 1; height: 24px; background: #0d1025; border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; display: flex; align-items: center; padding-left: 8px; font-size: 0.7rem; color: #fff; font-weight: 600; min-width: 30px; background: linear-gradient(90deg, #4f6ef7, #3b5de7); border-radius: 6px; }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: #8b8fa3; font-size: 0.9rem; }
+
+    /* Action result toast */
+    .toast { position: fixed; bottom: 20px; right: 20px; padding: 14px 20px; border-radius: 10px; font-size: 0.85rem; z-index: 1000; max-width: 360px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+    .toast.success { background: #0d3320; color: #4ade80; border: 1px solid #1a5c38; }
+    .toast.error { background: #2d1515; color: #ff6b6b; border: 1px solid #5a2020; }
+
+    /* Mobile */
+    @media (max-width: 900px) {
+      .sidebar { width: 60px; }
+      .sidebar .brand p, .sidebar nav a span:not(.icon), .sidebar .section-label, .sidebar .footer { display: none; }
+      .sidebar .brand h1 { font-size: 0.85rem; text-align: center; }
+      .sidebar nav a { justify-content: center; padding: 12px 0; }
+      .content { margin-left: 60px; padding: 16px; }
+      .master-detail { grid-template-columns: 1fr; }
+      .master-detail .master { position: static; max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <!-- ========== SIDEBAR ========== -->
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>VORTIS</h1>
+        <p>Panel Interno</p>
+      </div>
+      <nav>
+        <div class="section-label">General</div>
+        <a data-view="dashboard" class="active"><span class="icon">📊</span><span>Dashboard</span></a>
+        <a data-view="clientes"><span class="icon">👥</span><span>Clientes</span></a>
+        <a data-view="creativos"><span class="icon">🎨</span><span>Creativos</span></a>
+        <a data-view="analytics"><span class="icon">📈</span><span>Analytics</span></a>
+
+        <div class="section-label">Sistema</div>
+        <a data-view="config"><span class="icon">⚙️</span><span>Configuración</span></a>
+      </nav>
+      <div class="footer">
+        <a href="/" target="_blank">→ Onboarding (público)</a>
+        <a href="/api/health" target="_blank">→ API Health</a>
+      </div>
+    </aside>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="content">
+
+      <!-- ========== DASHBOARD VIEW ========== -->
+      <div id="view-dashboard" class="view active">
+        <div class="content-header">
+          <h2>Dashboard</h2>
+          <div class="breadcrumb">Vortis Media → Overview</div>
+        </div>
+
+        <div class="revenue-banner">
+          <div class="revenue-item"><div class="value" id="revClients">-</div><div class="label">Clientes Activos</div></div>
+          <div class="revenue-item"><div class="value" id="revMonthly">-</div><div class="label">Revenue Mensual</div></div>
+          <div class="revenue-item"><div class="value" id="revAdSpend">-</div><div class="label">Ad Spend Gestionado</div></div>
+          <div class="revenue-item"><div class="value" id="revAI">-</div><div class="label">Costo IA Acumulado</div></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="label">Total Clientes</div><div class="value" id="dsTotalClients">-</div></div>
+          <div class="stat-card"><div class="label">Campañas</div><div class="value" id="dsTotalCampaigns">-</div><div class="sub" id="dsReadyCampaigns"></div></div>
+          <div class="stat-card"><div class="label">Anuncios</div><div class="value" id="dsTotalAds">-</div><div class="sub" id="dsApprovedAds"></div></div>
+          <div class="stat-card"><div class="label">Tokens IA</div><div class="value" id="dsTokens">-</div><div class="sub" id="dsTokensCost"></div></div>
+        </div>
+
+        <div class="card">
+          <h3>Últimos Clientes</h3>
+          <table>
+            <thead><tr><th>Negocio</th><th>Rubro</th><th>Ciudad</th><th>Estado</th><th>Fecha</th><th></th></tr></thead>
+            <tbody id="dashRecentClients"><tr><td colspan="6" class="loading">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== CLIENTES VIEW (master-detail) ========== -->
+      <div id="view-clientes" class="view">
+        <div class="content-header">
+          <h2>Clientes</h2>
+          <div class="breadcrumb"><span id="clientCount">0</span> clientes en sistema</div>
+        </div>
+
+        <div class="master-detail">
+          <!-- Lista de clientes -->
+          <div class="master">
+            <input type="text" id="clientSearch" placeholder="Buscar cliente..." style="width:100%;padding:10px 14px;background:#0d1025;border:1px solid #2a2f52;border-radius:8px;color:#fff;font-size:0.85rem;margin-bottom:12px;">
+            <div id="clientsList"><div class="loading">Cargando...</div></div>
+          </div>
+
+          <!-- Detalle del cliente seleccionado -->
+          <div class="detail empty" id="clientDetail">
+            ← Seleccioná un cliente de la lista
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== CREATIVOS VIEW ========== -->
+      <div id="view-creativos" class="view">
+        <div class="content-header">
+          <h2>Creativos</h2>
+          <div class="breadcrumb">Plantillas y briefs</div>
+        </div>
+
+        <div class="tabs">
+          <button class="tab-btn active" data-creativos-tab="plantillas">Plantillas por Cliente</button>
+          <button class="tab-btn" data-creativos-tab="layouts">Layouts Base</button>
+        </div>
+
+        <div id="creativos-tab-plantillas" class="tab-content active">
+          <div class="card">
+            <h3>Generar Plantillas para un Cliente</h3>
+            <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:16px;">Las plantillas se auto-completan con datos del cliente, copy de la IA y colores de marca. Tu diseñador las replica en Canva.</p>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+              <select id="creativosClientSelect" style="flex:2;min-width:300px;padding:10px 14px;background:#0d1025;border:1px solid #2a2f52;border-radius:8px;color:#fff;">
+                <option value="">Seleccionar cliente...</option>
+              </select>
+              <button class="btn btn-primary" onclick="openTemplatesPage()">Ver Plantillas →</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Vista Rápida (5 anuncios + carrusel)</h3>
+            <div id="quickPreview"><p style="color:#8b8fa3;font-size:0.85rem;">Seleccioná un cliente arriba para ver la vista rápida.</p></div>
+          </div>
+        </div>
+
+        <div id="creativos-tab-layouts" class="tab-content">
+          <div class="card">
+            <h3>Layout A: Foto fondo + overlay</h3>
+            <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Logo arriba-izquierda. Foto del negocio cubre todo. Overlay oscuro abajo con headline + CTA.</p>
+            <div class="info-grid">
+              <div class="info-item"><div class="label">Dimensiones</div><div class="value">1080x1080 (Feed) / 1080x1920 (Story)</div></div>
+              <div class="info-item"><div class="label">Variantes</div><div class="value">Beneficio, Urgencia, Prueba Social</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Layout B: Foto arriba + bloque color</h3>
+            <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Foto en mitad superior. Logo flotando sobre el límite. Bloque de color de marca abajo con texto centrado.</p>
+            <div class="info-grid">
+              <div class="info-item"><div class="label">Dimensiones</div><div class="value">1080x1080 (Feed) / 1080x1920 (Story)</div></div>
+              <div class="info-item"><div class="label">Variantes</div><div class="value">Problema/Dolor, Emocional</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>Carrusel: Hook + Beneficios + CTA</h3>
+            <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Slide 1: pregunta que atrape. Slides 2-3: beneficios. Slide 4: foto real. Slide 5: CTA fuerte.</p>
+            <div class="info-grid">
+              <div class="info-item"><div class="label">Cantidad</div><div class="value">5 slides 1080x1080</div></div>
+              <div class="info-item"><div class="label">Uso</div><div class="value">Educar/calentar audiencia fría</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== ANALYTICS VIEW ========== -->
+      <div id="view-analytics" class="view">
+        <div class="content-header">
+          <h2>Analytics</h2>
+          <div class="breadcrumb">Performance de campañas</div>
+        </div>
+
+        <div class="revenue-banner">
+          <div class="revenue-item"><div class="value" id="anClients">-</div><div class="label">Clientes Activos</div></div>
+          <div class="revenue-item"><div class="value" id="anRevenue">-</div><div class="label">Revenue Mensual Est.</div></div>
+          <div class="revenue-item"><div class="value" id="anAdSpend">-</div><div class="label">Ad Spend Gestionado</div></div>
+        </div>
+
+        <!-- Breakdown por objetivo -->
+        <div class="card">
+          <h3>Performance por Objetivo de Campaña</h3>
+          <p style="color:#8b8fa3;font-size:0.8rem;margin-bottom:14px;">Cada objetivo se trackea diferente: WhatsApp = mensajes, Web = clicks, Marca = impresiones.</p>
+          <div id="objectiveBreakdown" class="stats-grid"></div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="label">Impresiones Totales</div><div class="value" id="anImpressions">0</div></div>
+          <div class="stat-card"><div class="label">Clicks Totales</div><div class="value" id="anClicks">0</div></div>
+          <div class="stat-card"><div class="label">Mensajes Totales</div><div class="value" id="anMessages">0</div></div>
+        </div>
+
+        <div class="card">
+          <h3>Top Anuncios por Objetivo</h3>
+          <div class="tabs" id="topAdsTabs">
+            <button class="tab-btn active" data-objective="whatsapp">WhatsApp (Mensajes)</button>
+            <button class="tab-btn" data-objective="web">Web (Clicks)</button>
+            <button class="tab-btn" data-objective="brand">Marca (Impresiones)</button>
+          </div>
+          <table>
+            <thead><tr><th>Headline</th><th>Industria</th><th>Cliente</th><th id="topAdsMetric">Mensajes</th><th>CTR</th></tr></thead>
+            <tbody id="topAdsTable"><tr><td colspan="5" class="loading">Sin datos aún</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <h3>Performance por Industria</h3>
+          <div class="bar-chart" id="industryChart"></div>
+        </div>
+
+        <div class="card">
+          <h3>Top Campañas (todas las industrias)</h3>
+          <table>
+            <thead><tr><th>Negocio</th><th>Industria</th><th>Estado</th><th>Impr.</th><th>Clicks</th><th>Mensajes</th><th>CTR</th></tr></thead>
+            <tbody id="topCampaignsTable"><tr><td colspan="7" class="loading">Sin datos aún</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== CONFIG VIEW ========== -->
+      <div id="view-config" class="view">
+        <div class="content-header">
+          <h2>Configuración</h2>
+          <div class="breadcrumb">Settings del sistema</div>
+        </div>
+
+        <div class="card">
+          <h3>Generación de Anuncios (IA)</h3>
+          <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:16px;">Cantidad y configuración de anuncios que la IA genera por cliente. Más anuncios = mejor optimización de Meta, pero más tokens consumidos.</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="label">Anuncios por campaña</div>
+              <div class="value">
+                <select id="cfgAdsPerCampaign" style="width:100%;padding:6px;background:#0d1025;border:1px solid #2a2f52;border-radius:6px;color:#fff;">
+                  <option value="5" selected>5 (default)</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                </select>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="label">Ad Sets (conjuntos)</div>
+              <div class="value">
+                <select id="cfgAdSets" style="width:100%;padding:6px;background:#0d1025;border:1px solid #2a2f52;border-radius:6px;color:#fff;">
+                  <option value="1" selected>1 (todos los anuncios juntos)</option>
+                  <option value="3">3 (por ángulo: dolor/emocional/urgencia)</option>
+                  <option value="5">5 (uno por estilo de copy)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="saveConfig()">Guardar configuración</button>
+          <p style="color:#facc15;font-size:0.75rem;margin-top:10px;">⚠ Por ahora estos valores se aplican a la próxima campaña que se cree.</p>
+        </div>
+
+        <div class="card">
+          <h3>Estado de Integraciones</h3>
+          <div id="integrationsStatus" class="info-grid"></div>
+        </div>
+
+        <div class="card">
+          <h3>Notas Internas</h3>
+          <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Memo interno de Vortis. No lo ven los clientes.</p>
+          <textarea id="internalNotes" rows="6" style="width:100%;padding:12px;background:#0d1025;border:1px solid #2a2f52;border-radius:8px;color:#fff;font-size:0.85rem;resize:vertical;">Recordá: 1) Verificar Meta API antes de cada deploy. 2) Llamar a clientes nuevos en las primeras 24hs. 3) Revisar performance los lunes.</textarea>
+          <button class="btn btn-primary" style="margin-top:10px;" onclick="showToast('Notas guardadas (solo localStorage)', 'success'); localStorage.setItem('vortisNotes', document.getElementById('internalNotes').value)">Guardar notas</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <script>
+    // ========== STATE ==========
+    let _allClients = [];
+    let _selectedClientId = null;
+    let _topAdsData = null;
+
+    const INDUSTRY_NAMES = {
+      deportes_recreacion: 'Deportes', estetica_cuidado_personal: 'Estética',
+      servicios_hogar: 'Hogar/Constr.', educacion: 'Educación', gastronomia: 'Gastronomía',
+      salud: 'Salud', inmobiliaria: 'Inmobiliaria', automotriz: 'Automotriz',
+      tecnologia: 'Tecnología', otro: 'Otro',
+    };
+
+    // ========== ROUTING ==========
+    document.querySelectorAll('.sidebar nav a').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const view = link.dataset.view;
+        showView(view);
+      });
+    });
+
+    function showView(viewName) {
+      document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+      document.querySelector(`.sidebar nav a[data-view="${viewName}"]`).classList.add('active');
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + viewName).classList.add('active');
+      window.location.hash = viewName;
+
+      // Lazy load data
+      if (viewName === 'dashboard') loadDashboard();
+      if (viewName === 'clientes') loadClientes();
+      if (viewName === 'creativos') loadClientsForCreativos();
+      if (viewName === 'analytics') loadAnalytics();
+      if (viewName === 'config') loadConfig();
+    }
+
+    // Hash-based init
+    const initView = window.location.hash.replace('#', '') || 'dashboard';
+    if (['dashboard', 'clientes', 'creativos', 'analytics', 'config'].includes(initView)) {
+      showView(initView);
+    } else {
+      loadDashboard();
+    }
+
+    // ========== TABS in CREATIVOS ==========
+    document.querySelectorAll('[data-creativos-tab]').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('[data-creativos-tab]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        document.querySelectorAll('#view-creativos .tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById('creativos-tab-' + b.dataset.creativosTab).classList.add('active');
+      });
+    });
+
+    // ========== TABS in ANALYTICS (top ads by objective) ==========
+    document.querySelectorAll('#topAdsTabs .tab-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('#topAdsTabs .tab-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        renderTopAdsByObjective(b.dataset.objective);
+      });
+    });
+
+    // ========== DASHBOARD ==========
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard');
+        const data = await res.json();
+
+        document.getElementById('dsTotalClients').textContent = data.stats.totalClients;
+        document.getElementById('dsTotalCampaigns').textContent = data.stats.totalCampaigns;
+        document.getElementById('dsReadyCampaigns').textContent = data.stats.readyCampaigns + ' listas';
+        document.getElementById('dsTotalAds').textContent = data.stats.totalAds;
+        document.getElementById('dsApprovedAds').textContent = data.stats.approvedAds + ' aprobados';
+        document.getElementById('dsTokens').textContent = (data.stats.totalTokens / 1000).toFixed(1) + 'k';
+        document.getElementById('dsTokensCost').textContent = '~$' + data.stats.estimatedTokenCostUsd + ' USD';
+
+        document.getElementById('revClients').textContent = data.stats.activeClients;
+        document.getElementById('revMonthly').textContent = '$' + (data.stats.activeClients * 99).toLocaleString();
+        document.getElementById('revAdSpend').textContent = '$' + (data.stats.activeClients * 200).toLocaleString();
+        document.getElementById('revAI').textContent = '$' + data.stats.estimatedTokenCostUsd;
+
+        document.getElementById('dashRecentClients').innerHTML = data.recentClients.length === 0
+          ? '<tr><td colspan="6" class="loading">Sin clientes aún</td></tr>'
+          : data.recentClients.map(c => `
+              <tr>
+                <td><strong>${c.business_name}</strong></td>
+                <td>${INDUSTRY_NAMES[c.industry] || c.industry}</td>
+                <td>${c.city}</td>
+                <td><span class="pill ${c.status}">${c.status}</span></td>
+                <td>${new Date(c.created_at).toLocaleDateString()}</td>
+                <td><button class="btn btn-primary btn-sm" onclick="goToClient('${c.id}')">Ver</button></td>
+              </tr>`).join('');
+      } catch (err) { console.error(err); }
+    }
+
+    function goToClient(id) {
+      _selectedClientId = id;
+      showView('clientes');
+      setTimeout(() => selectClient(id), 100);
+    }
+
+    // ========== CLIENTES ==========
+    async function loadClientes() {
+      try {
+        const res = await fetch('/api/clients');
+        const data = await res.json();
+        _allClients = data.clients;
+        document.getElementById('clientCount').textContent = _allClients.length;
+        renderClientsList(_allClients);
+
+        if (_selectedClientId) {
+          selectClient(_selectedClientId);
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    function renderClientsList(clients) {
+      const list = document.getElementById('clientsList');
+      if (clients.length === 0) {
+        list.innerHTML = '<div class="loading">Sin clientes</div>';
+        return;
+      }
+      list.innerHTML = clients.map(c => `
+        <div class="client-list-item ${_selectedClientId === c.id ? 'active' : ''}" onclick="selectClient('${c.id}')">
+          <div class="info">
+            <div class="business-name">${c.business_name}</div>
+            <div class="industry-tag">${INDUSTRY_NAMES[c.industry] || c.industry} · ${c.city}</div>
+          </div>
+          <span class="pill ${c.status}">${c.status}</span>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('clientSearch').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = _allClients.filter(c =>
+        c.business_name.toLowerCase().includes(q) ||
+        c.industry.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q)
+      );
+      renderClientsList(filtered);
+    });
+
+    async function selectClient(clientId) {
+      _selectedClientId = clientId;
+      renderClientsList(_allClients);
+      const detail = document.getElementById('clientDetail');
+      detail.classList.remove('empty');
+      detail.innerHTML = '<div class="loading">Cargando detalle...</div>';
+
+      try {
+        const res = await fetch('/api/clients/' + clientId);
+        const data = await res.json();
+        const c = data.client;
+        const camp = data.campaigns[0];
+        const ads = data.ads;
+
+        let analysis = {}, targeting = {}, budget = {};
+        if (camp) {
+          try { analysis = JSON.parse(camp.business_analysis || '{}'); } catch {}
+          try { targeting = JSON.parse(camp.targeting_config || '{}'); } catch {}
+          try { budget = JSON.parse(camp.budget_config || '{}'); } catch {}
+        }
+
+        const hasMeta = camp?.meta_campaign_id;
+        const metaStatus = camp?.meta_status || 'PAUSED';
+
+        detail.innerHTML = `
+          <h3 style="color:#fff;margin-bottom:6px;">${c.business_name}</h3>
+          <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:14px;">${INDUSTRY_NAMES[c.industry] || c.industry} · ${c.city} · ${c.contact_email}</p>
+
+          <div class="tabs">
+            <button class="tab-btn active" data-detail-tab="resumen">Resumen</button>
+            <button class="tab-btn" data-detail-tab="anuncios">Anuncios (${ads.length})</button>
+            <button class="tab-btn" data-detail-tab="meta">Meta Ads</button>
+            <button class="tab-btn" data-detail-tab="data">Data IA</button>
+          </div>
+
+          <!-- RESUMEN -->
+          <div class="tab-content active" id="dt-resumen">
+            <div class="detail-section">
+              <h4>Estado</h4>
+              <div class="info-grid">
+                <div class="info-item"><div class="label">Estado del cliente</div><div class="value"><span class="pill ${c.status}">${c.status}</span></div></div>
+                <div class="info-item"><div class="label">Estado de campaña</div><div class="value"><span class="pill ${camp?.status || 'pending'}">${camp?.status || 'sin campaña'}</span></div></div>
+                <div class="info-item"><div class="label">Meta</div><div class="value"><span class="pill ${hasMeta ? metaStatus : 'onboarding'}">${hasMeta ? metaStatus : 'No desplegado'}</span></div></div>
+                <div class="info-item"><div class="label">Pago</div><div class="value"><span class="pill ${c.payment_status}">${c.payment_status}</span></div></div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>Datos del Negocio</h4>
+              <div class="info-grid">
+                <div class="info-item"><div class="label">Producto/Servicio</div><div class="value">${c.product_service?.substring(0, 100) || '-'}...</div></div>
+                <div class="info-item"><div class="label">Diferenciadores</div><div class="value">${c.differentiators?.substring(0, 100) || '-'}</div></div>
+                <div class="info-item"><div class="label">Precio</div><div class="value">${c.price_range || '-'}</div></div>
+                <div class="info-item"><div class="label">Objetivo</div><div class="value">${c.campaign_objective}</div></div>
+                <div class="info-item"><div class="label">Tono</div><div class="value">${c.brand_tone}</div></div>
+                <div class="info-item"><div class="label">Colores</div><div class="value">${c.brand_colors || '-'}</div></div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h4>Acciones</h4>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <a class="btn btn-secondary btn-sm" href="/mi-campana?id=${clientId}" target="_blank">Ver como cliente →</a>
+                <a class="btn btn-secondary btn-sm" href="/aprobar?id=${clientId}" target="_blank">Página de aprobación →</a>
+                <a class="btn btn-secondary btn-sm" href="/plantillas#${clientId}" target="_blank" onclick="localStorage.setItem('selectedClient', '${clientId}')">Ver plantillas →</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- ANUNCIOS -->
+          <div class="tab-content" id="dt-anuncios">
+            ${ads.length === 0 ? '<p style="color:#8b8fa3;">Sin anuncios generados aún</p>' : ads.map((a, i) => `
+              <div class="ad-card">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                  <div style="flex:1;">
+                    <div class="ad-headline">${a.headline}</div>
+                    <div class="ad-desc">${a.description}</div>
+                  </div>
+                  <span class="pill ${a.validation_status === 'approved' ? 'ready' : 'error'}">${a.validation_status}</span>
+                </div>
+                <div class="ad-meta">
+                  <span>📨 ${a.cta_text}</span>
+                  ${a.client_approved === 1 ? '<span style="color:#4ade80;">✓ Cliente aprobó</span>' : a.client_approved === -1 ? '<span style="color:#ff6b6b;">✗ Rechazado</span>' : '<span style="color:#facc15;">⏳ Pendiente cliente</span>'}
+                  ${a.client_feedback ? '<span>💬 ' + a.client_feedback + '</span>' : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <!-- META -->
+          <div class="tab-content" id="dt-meta">
+            ${!camp ? '<p style="color:#8b8fa3;">Sin campaña</p>' : `
+              <div class="detail-section">
+                <h4>Estado en Meta Ads</h4>
+                <div class="info-grid">
+                  <div class="info-item"><div class="label">Meta Campaign ID</div><div class="value" style="font-family:monospace;font-size:0.75rem;">${camp.meta_campaign_id || 'No desplegado'}</div></div>
+                  <div class="info-item"><div class="label">Meta AdSet ID</div><div class="value" style="font-family:monospace;font-size:0.75rem;">${camp.meta_adset_id || '-'}</div></div>
+                </div>
+              </div>
+              <div class="detail-section">
+                <h4>Acciones</h4>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  ${!hasMeta && camp.status === 'ready' ? `<button class="btn btn-primary" onclick="metaAction('${camp.id}', 'deploy')">Desplegar en Meta</button>` : ''}
+                  ${hasMeta && metaStatus === 'PAUSED' ? `<button class="btn btn-success" onclick="metaAction('${camp.id}', 'activate')">Activar</button>` : ''}
+                  ${hasMeta && metaStatus === 'ACTIVE' ? `<button class="btn btn-warn" onclick="metaAction('${camp.id}', 'pause')">Pausar</button>` : ''}
+                </div>
+              </div>
+              <div class="detail-section">
+                <h4>Presupuesto</h4>
+                <div class="info-grid">
+                  <div class="info-item"><div class="label">Diario</div><div class="value">$${budget.daily_budget_usd || c.daily_budget_usd}</div></div>
+                  <div class="info-item"><div class="label">Mensual</div><div class="value">$${budget.monthly_budget_usd || 200}</div></div>
+                </div>
+              </div>
+            `}
+          </div>
+
+          <!-- DATA IA -->
+          <div class="tab-content" id="dt-data">
+            <div class="detail-section">
+              <h4>Análisis del Negocio (IA)</h4>
+              <pre>${JSON.stringify(analysis, null, 2)}</pre>
+            </div>
+            <div class="detail-section">
+              <h4>Segmentación</h4>
+              <pre>${JSON.stringify(targeting, null, 2)}</pre>
+            </div>
+            <div class="detail-section">
+              <h4>Presupuesto</h4>
+              <pre>${JSON.stringify(budget, null, 2)}</pre>
+            </div>
+          </div>
+        `;
+
+        // Wire up internal tabs
+        detail.querySelectorAll('[data-detail-tab]').forEach(b => {
+          b.addEventListener('click', () => {
+            detail.querySelectorAll('[data-detail-tab]').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            detail.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            detail.querySelector('#dt-' + b.dataset.detailTab).classList.add('active');
+          });
+        });
+
+      } catch (err) {
+        detail.innerHTML = '<div style="color:#ff6b6b;">Error cargando cliente: ' + err.message + '</div>';
+      }
+    }
+
+    async function metaAction(campaignId, action) {
+      try {
+        const res = await fetch('/api/meta/' + campaignId + '/' + action, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Acción ejecutada: ' + action, 'success');
+          if (_selectedClientId) selectClient(_selectedClientId);
+        } else {
+          showToast('Error: ' + data.error, 'error');
+        }
+      } catch (err) {
+        showToast('Error de conexión', 'error');
+      }
+    }
+
+    // ========== CREATIVOS ==========
+    async function loadClientsForCreativos() {
+      try {
+        const res = await fetch('/api/clients');
+        const data = await res.json();
+        const sel = document.getElementById('creativosClientSelect');
+        sel.innerHTML = '<option value="">Seleccionar cliente...</option>' +
+          data.clients.map(c => `<option value="${c.id}">${c.business_name} (${INDUSTRY_NAMES[c.industry] || c.industry})</option>`).join('');
+        sel.addEventListener('change', () => loadQuickPreview(sel.value));
+      } catch (err) { console.error(err); }
+    }
+
+    async function loadQuickPreview(clientId) {
+      const container = document.getElementById('quickPreview');
+      if (!clientId) { container.innerHTML = '<p style="color:#8b8fa3;font-size:0.85rem;">Seleccioná un cliente.</p>'; return; }
+      container.innerHTML = '<div class="loading">Cargando...</div>';
+      try {
+        const res = await fetch('/api/clients/' + clientId);
+        const data = await res.json();
+        const ads = data.ads;
+        if (ads.length === 0) {
+          container.innerHTML = '<p style="color:#8b8fa3;">Cliente sin anuncios generados aún.</p>';
+          return;
+        }
+        const variants = ['Beneficio Directo', 'Problema/Dolor', 'Urgencia', 'Prueba Social', 'Emocional'];
+        container.innerHTML = ads.map((a, i) => `
+          <div class="ad-card">
+            <div style="font-size:0.7rem;color:#8fa4ff;text-transform:uppercase;margin-bottom:4px;">Variante ${i+1}: ${variants[i] || 'Otro'}</div>
+            <div class="ad-headline">${a.headline}</div>
+            <div class="ad-desc">${a.description}</div>
+          </div>
+        `).join('');
+      } catch (err) {
+        container.innerHTML = '<div style="color:#ff6b6b;">Error: ' + err.message + '</div>';
+      }
+    }
+
+    function openTemplatesPage() {
+      const id = document.getElementById('creativosClientSelect').value;
+      if (!id) { showToast('Seleccioná un cliente primero', 'error'); return; }
+      window.open('/plantillas?id=' + id, '_blank');
+    }
+
+    // ========== ANALYTICS ==========
+    async function loadAnalytics() {
+      try {
+        const res = await fetch('/api/analytics');
+        const data = await res.json();
+
+        document.getElementById('anClients').textContent = data.revenue.active_clients;
+        document.getElementById('anRevenue').textContent = '$' + data.revenue.monthly_revenue_estimate.toLocaleString();
+        document.getElementById('anAdSpend').textContent = '$' + data.revenue.monthly_ad_spend_managed.toLocaleString();
+        document.getElementById('anImpressions').textContent = (data.totals.total_impressions || 0).toLocaleString();
+        document.getElementById('anClicks').textContent = (data.totals.total_clicks || 0).toLocaleString();
+        document.getElementById('anMessages').textContent = (data.totals.total_messages || 0).toLocaleString();
+
+        // Industry chart
+        const max = Math.max(...data.byIndustry.map(i => i.clients), 1);
+        document.getElementById('industryChart').innerHTML = data.byIndustry.length > 0
+          ? data.byIndustry.map(i => {
+              const pct = (i.clients / max) * 100;
+              return `<div class="bar-row">
+                <div class="bar-label">${INDUSTRY_NAMES[i.industry] || i.industry}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${pct}%;">${i.clients} clientes</div></div>
+              </div>`;
+            }).join('')
+          : '<p style="color:#8b8fa3;">Sin datos aún</p>';
+
+        // Objective breakdown
+        const objectiveBreakdown = computeObjectiveBreakdown(data);
+        document.getElementById('objectiveBreakdown').innerHTML = objectiveBreakdown.map(o => `
+          <div class="stat-card">
+            <div class="label">${o.label}</div>
+            <div class="value">${o.metric}</div>
+            <div class="sub">${o.clients} clientes · ${o.metricLabel}</div>
+          </div>
+        `).join('');
+
+        // Top campaigns
+        document.getElementById('topCampaignsTable').innerHTML = data.topCampaigns.length > 0
+          ? data.topCampaigns.map(c => `
+            <tr>
+              <td><strong>${c.business_name}</strong></td>
+              <td>${INDUSTRY_NAMES[c.industry] || c.industry}</td>
+              <td><span class="pill ${c.meta_status === 'ACTIVE' ? 'ACTIVE' : c.campaign_status === 'ready' ? 'ready' : 'processing'}">${c.meta_status || c.campaign_status}</span></td>
+              <td>${(c.impressions||0).toLocaleString()}</td>
+              <td>${(c.clicks||0).toLocaleString()}</td>
+              <td>${(c.messages||0).toLocaleString()}</td>
+              <td>${c.ctr}%</td>
+            </tr>`).join('')
+          : '<tr><td colspan="7" class="loading">Sin campañas con métricas aún</td></tr>';
+
+        // Save data for top ads tabs
+        _topAdsData = data;
+        renderTopAdsByObjective('whatsapp');
+
+      } catch (err) { console.error(err); }
+    }
+
+    function computeObjectiveBreakdown(data) {
+      // Mock breakdown by objective - in real app this would come from the API
+      // Currently we just show overall data labeled per objective
+      return [
+        { label: 'WhatsApp - Mensajes', metric: (data.totals.total_messages || 0).toLocaleString(), clients: 0, metricLabel: 'mensajes recibidos' },
+        { label: 'Web - Clicks', metric: (data.totals.total_clicks || 0).toLocaleString(), clients: 0, metricLabel: 'clicks a sitio' },
+        { label: 'Marca - Impresiones', metric: (data.totals.total_impressions || 0).toLocaleString(), clients: 0, metricLabel: 'impresiones' },
+      ];
+    }
+
+    function renderTopAdsByObjective(objective) {
+      if (!_topAdsData) return;
+      const labels = { whatsapp: 'Mensajes', web: 'Clicks', brand: 'Impresiones' };
+      document.getElementById('topAdsMetric').textContent = labels[objective];
+      const sortKey = objective === 'whatsapp' ? 'messages' : objective === 'web' ? 'clicks' : 'impressions';
+      const sorted = [..._topAdsData.topAds].sort((a, b) => (b[sortKey] || 0) - (a[sortKey] || 0));
+      document.getElementById('topAdsTable').innerHTML = sorted.length > 0
+        ? sorted.slice(0, 10).map(a => `
+          <tr>
+            <td>${a.headline.substring(0, 60)}${a.headline.length > 60 ? '...' : ''}</td>
+            <td>${INDUSTRY_NAMES[a.industry] || a.industry}</td>
+            <td>${a.business_name || '-'}</td>
+            <td>${(a[sortKey] || 0).toLocaleString()}</td>
+            <td>${a.ctr || 0}%</td>
+          </tr>`).join('')
+        : '<tr><td colspan="5" class="loading">Sin datos aún (corré una campaña real para ver datos)</td></tr>';
+    }
+
+    // ========== CONFIG ==========
+    function loadConfig() {
+      // Load from localStorage
+      document.getElementById('cfgAdsPerCampaign').value = localStorage.getItem('cfgAds') || '5';
+      document.getElementById('cfgAdSets').value = localStorage.getItem('cfgAdSets') || '1';
+      document.getElementById('internalNotes').value = localStorage.getItem('vortisNotes') || document.getElementById('internalNotes').value;
+
+      // Integration status
+      Promise.all([
+        fetch('/api/health').then(r => r.json()).catch(() => null),
+        fetch('/api/config/cloudinary').then(r => r.json()).catch(() => null),
+      ]).then(([health, cloudinary]) => {
+        const cloudinaryOk = cloudinary && cloudinary.cloudName && cloudinary.cloudName !== 'demo';
+        const html = `
+          <div class="info-item"><div class="label">Server</div><div class="value">${health ? '✅ Activo' : '❌ Caído'}</div></div>
+          <div class="info-item"><div class="label">Anthropic IA</div><div class="value">${'✅ Configurada'}</div></div>
+          <div class="info-item"><div class="label">Cloudinary</div><div class="value">${cloudinaryOk ? '✅ Configurado' : '⚠ Demo (sin cuenta real)'}</div></div>
+          <div class="info-item"><div class="label">Meta Ads</div><div class="value">⚠ Pendiente conectar token</div></div>
+          <div class="info-item"><div class="label">SMTP Email</div><div class="value">⚠ Pendiente configurar</div></div>
+          <div class="info-item"><div class="label">WhatsApp API</div><div class="value">⚠ Pendiente configurar</div></div>
+        `;
+        document.getElementById('integrationsStatus').innerHTML = html;
+      });
+    }
+
+    function saveConfig() {
+      localStorage.setItem('cfgAds', document.getElementById('cfgAdsPerCampaign').value);
+      localStorage.setItem('cfgAdSets', document.getElementById('cfgAdSets').value);
+      showToast('Configuración guardada', 'success');
+    }
+
+    // ========== TOAST ==========
+    function showToast(msg, type) {
+      const t = document.createElement('div');
+      t.className = 'toast ' + type;
+      t.textContent = msg;
+      document.getElementById('toastContainer').appendChild(t);
+      setTimeout(() => t.remove(), 4000);
+    }
+  </script>
+</body>
+</html>

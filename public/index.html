@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Onboarding</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
+    .logo { text-align: center; margin-bottom: 40px; }
+    .logo h1 { font-size: 2.5rem; font-weight: 800; color: #fff; letter-spacing: 2px; }
+    .logo p { color: #8b8fa3; margin-top: 8px; font-size: 0.95rem; }
+    .form-card { background: #141832; border-radius: 16px; padding: 40px; border: 1px solid #1e2345; }
+    .form-card h2 { font-size: 1.4rem; margin-bottom: 8px; color: #fff; }
+    .form-card .subtitle { color: #8b8fa3; margin-bottom: 32px; font-size: 0.9rem; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: #b0b4cc; font-weight: 500; }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%; padding: 12px 16px; background: #0d1025; border: 1px solid #2a2f52;
+      border-radius: 8px; color: #fff; font-size: 0.95rem; transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none; border-color: #4f6ef7;
+    }
+    .form-group textarea { resize: vertical; min-height: 80px; }
+    .form-group select { appearance: none; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-section { margin-top: 32px; padding-top: 24px; border-top: 1px solid #1e2345; }
+    .form-section h3 { font-size: 1.1rem; margin-bottom: 16px; color: #8fa4ff; }
+    .btn-submit {
+      width: 100%; padding: 16px; background: linear-gradient(135deg, #4f6ef7, #3b5de7);
+      border: none; border-radius: 10px; color: #fff; font-size: 1.05rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.1s, box-shadow 0.2s; margin-top: 24px;
+    }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 8px 25px rgba(79,110,247,0.3); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .success-msg { text-align: center; padding: 40px; }
+    .success-msg h2 { color: #4ade80; margin-bottom: 16px; }
+    .success-msg p { color: #8b8fa3; line-height: 1.6; }
+    .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; color: #ff6b6b; font-size: 0.9rem; }
+    .required { color: #ff6b6b; }
+    .admin-link { text-align: center; margin-top: 24px; }
+    .admin-link a { color: #4f6ef7; text-decoration: none; font-size: 0.85rem; }
+
+    /* Stepper */
+    .stepper { display: flex; justify-content: center; gap: 0; margin-bottom: 32px; }
+    .step { display: flex; align-items: center; gap: 8px; }
+    .step-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 2px solid #2a2f52; color: #8b8fa3; }
+    .step.active .step-num { background: #4f6ef7; border-color: #4f6ef7; color: #fff; }
+    .step.done .step-num { background: #0d9f4f; border-color: #0d9f4f; color: #fff; }
+    .step-label { font-size: 0.8rem; color: #8b8fa3; }
+    .step.active .step-label { color: #fff; }
+    .step-line { width: 60px; height: 2px; background: #2a2f52; margin: 0 12px; }
+    .step-line.done { background: #0d9f4f; }
+
+    /* Upload area */
+    .upload-zone { border: 2px dashed #2a2f52; border-radius: 14px; padding: 40px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 20px; }
+    .upload-zone:hover { border-color: #4f6ef7; background: rgba(79,110,247,0.05); }
+    .upload-zone .upload-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .upload-zone p { color: #8b8fa3; font-size: 0.9rem; }
+    .upload-zone .upload-hint { font-size: 0.75rem; color: #555; margin-top: 8px; }
+
+    .uploaded-images { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 16px; }
+    .uploaded-img { position: relative; border-radius: 10px; overflow: hidden; border: 1px solid #2a2f52; aspect-ratio: 1; background: #0d1025; }
+    .uploaded-img img { width: 100%; height: 100%; object-fit: cover; }
+    .uploaded-img .remove-btn { position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; background: rgba(220,38,38,0.9); border: none; border-radius: 50%; color: #fff; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .uploaded-img .img-label { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); padding: 4px 8px; font-size: 0.65rem; color: #fff; text-align: center; }
+
+    .upload-tips { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .upload-tips h4 { color: #facc15; font-size: 0.85rem; margin-bottom: 8px; }
+    .upload-tips li { font-size: 0.8rem; color: #b0b4cc; padding: 3px 0; }
+
+    .btn-skip { background: none; border: 1px solid #2a2f52; color: #8b8fa3; padding: 14px; border-radius: 10px; width: 100%; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
+    .btn-skip:hover { border-color: #4f6ef7; color: #fff; }
+
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .form-card { padding: 24px; } .step-line { width: 30px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>VORTIS MEDIA</h1>
+      <p>IA Generativa para Campanas Publicitarias</p>
+    </div>
+
+    <!-- Stepper -->
+    <div class="stepper" id="stepper">
+      <div class="step active" id="step1indicator">
+        <div class="step-num">1</div>
+        <span class="step-label">Tu negocio</span>
+      </div>
+      <div class="step-line" id="stepLine"></div>
+      <div class="step" id="step2indicator">
+        <div class="step-num">2</div>
+        <span class="step-label">Imagenes</span>
+      </div>
+    </div>
+
+    <div class="form-card" id="formCard">
+      <h2 id="formTitle">Formulario de Onboarding</h2>
+      <p class="subtitle" id="formSubtitle">Completa los datos de tu negocio y nuestro sistema de IA generara tu campana automaticamente.</p>
+
+      <div id="errorContainer"></div>
+
+      <form id="onboardingForm">
+        <div class="form-section">
+          <h3>Tu Negocio</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre del negocio <span class="required">*</span></label>
+              <input type="text" name="business_name" required placeholder="Ej: SteelMax Construcciones">
+            </div>
+            <div class="form-group">
+              <label>Rubro / Nicho <span class="required">*</span></label>
+              <select name="industry" required>
+                <option value="">Seleccionar...</option>
+                <option value="deportes_recreacion">Deportes y Recreacion</option>
+                <option value="estetica_cuidado_personal">Estetica y Cuidado Personal</option>
+                <option value="servicios_hogar">Servicios del Hogar / Construccion</option>
+                <option value="educacion">Educacion y Cursos</option>
+                <option value="gastronomia">Gastronomia</option>
+                <option value="salud">Salud y Bienestar</option>
+                <option value="inmobiliaria">Inmobiliaria</option>
+                <option value="automotriz">Automotriz</option>
+                <option value="tecnologia">Tecnologia</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ciudad <span class="required">*</span></label>
+              <input type="text" name="city" required placeholder="Ej: Rafaela, Santa Fe">
+            </div>
+            <div class="form-group">
+              <label>Pais</label>
+              <select name="country">
+                <option value="Argentina">Argentina</option>
+                <option value="Mexico">Mexico</option>
+                <option value="Colombia">Colombia</option>
+                <option value="Chile">Chile</option>
+                <option value="USA">USA (Latinos)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Producto o servicio principal <span class="required">*</span></label>
+            <textarea name="product_service" required placeholder="Describe que vendes o que servicio ofreces. Se lo mas detallado posible."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Diferenciadores / Beneficios</label>
+            <textarea name="differentiators" placeholder="Que te hace diferente? Por que deberian elegirte a vos?"></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Rango de precios</label>
+              <input type="text" name="price_range" placeholder="Ej: Desde $2.500.000">
+            </div>
+            <div class="form-group">
+              <label>URL destino (web o WhatsApp)</label>
+              <input type="text" name="destination_url" placeholder="https://tunegocio.com">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Tu Campana</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Objetivo de la campana <span class="required">*</span></label>
+              <select name="campaign_objective" required>
+                <option value="Mensajes por WhatsApp">Mensajes por WhatsApp</option>
+                <option value="Trafico al sitio web">Trafico al sitio web</option>
+                <option value="Leads / formularios">Leads / formularios</option>
+                <option value="Reconocimiento de marca">Reconocimiento de marca</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tono de marca</label>
+              <select name="brand_tone">
+                <option value="profesional">Profesional</option>
+                <option value="cercano">Cercano / Amigable</option>
+                <option value="premium">Premium / Exclusivo</option>
+                <option value="tecnico">Tecnico</option>
+                <option value="juvenil">Juvenil / Dinamico</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Palabras prohibidas</label>
+              <input type="text" name="prohibited_words" placeholder="Ej: barato, gratis, descuento">
+            </div>
+            <div class="form-group">
+              <label>Palabras mandatorias</label>
+              <input type="text" name="mandatory_words" placeholder="Ej: certificado IRAM (norma de calidad argentina)">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Tu Marca</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Colores de tu marca</label>
+              <input type="text" name="brand_colors" placeholder="Ej: Azul oscuro, blanco, dorado">
+            </div>
+            <div class="form-group">
+              <label>Slogan o frase</label>
+              <input type="text" name="slogan" placeholder="Ej: 'Construimos tu futuro'">
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Contacto</h3>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre de contacto <span class="required">*</span></label>
+              <input type="text" name="contact_name" required placeholder="Tu nombre">
+            </div>
+            <div class="form-group">
+              <label>Email <span class="required">*</span></label>
+              <input type="email" name="contact_email" required placeholder="tu@email.com">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Telefono / WhatsApp</label>
+            <input type="text" name="contact_phone" placeholder="+54 9 11 1234-5678">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn">
+          Siguiente &rarr;
+        </button>
+      </form>
+
+    <!-- Step 2: Images -->
+    <div id="step2Container" style="display:none;">
+      <div class="upload-tips">
+        <h4>Que imagenes necesitamos?</h4>
+        <ul>
+          <li><strong>Tu logo</strong> (si tenes, en buena calidad)</li>
+          <li><strong>Fotos de tu negocio</strong> (local, productos, equipo, lo que te represente)</li>
+          <li>Minimo 2-3 fotos, cuantas mas mejor</li>
+          <li>Fotos reales > fotos de stock</li>
+        </ul>
+      </div>
+
+      <div class="upload-zone" id="uploadZone" onclick="openUploadWidget()">
+        <div class="upload-icon">📸</div>
+        <p><strong>Hace click aca para subir imagenes</strong></p>
+        <p class="upload-hint">JPG, PNG o WEBP. Podes subir varias a la vez.</p>
+      </div>
+
+      <div class="uploaded-images" id="uploadedImages"></div>
+
+      <button class="btn-submit" id="btnFinish" onclick="finishOnboarding()" style="margin-top:24px;">
+        Finalizar y Generar Campana
+      </button>
+      <button class="btn-skip" onclick="finishOnboarding()">
+        Omitir por ahora (las puedo subir despues)
+      </button>
+    </div>
+    </div>
+
+    <div class="success-msg" id="successMsg" style="display:none;">
+      <h2>Tu campana se esta generando</h2>
+      <p>Nuestro sistema de IA esta analizando tu negocio y creando tu campana personalizada. Este proceso toma entre 30 segundos y 2 minutos.</p>
+      <p style="margin-top:16px;">Te notificaremos por email cuando este lista para revision.</p>
+      <p style="margin-top:24px; color: #4f6ef7;" id="clientIdDisplay"></p>
+    </div>
+
+    <div class="admin-link">
+      <a href="/admin">Panel de Administracion</a>
+    </div>
+  </div>
+
+  <!-- Cloudinary Upload Widget -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+
+  <script>
+    let _clientId = null;
+    let _uploadedUrls = [];
+
+    // STEP 1: Form submission
+    document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Guardando datos...';
+      document.getElementById('errorContainer').innerHTML = '';
+
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+
+      try {
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          _clientId = result.clientId;
+          // Move to Step 2
+          document.getElementById('onboardingForm').style.display = 'none';
+          document.getElementById('formTitle').textContent = 'Subi las imagenes de tu negocio';
+          document.getElementById('formSubtitle').textContent = 'Estas imagenes se usan para crear tus anuncios. Logo, fotos del local, productos, lo que mejor represente tu marca.';
+          document.getElementById('step2Container').style.display = 'block';
+          // Update stepper
+          document.getElementById('step1indicator').classList.remove('active');
+          document.getElementById('step1indicator').classList.add('done');
+          document.getElementById('step1indicator').querySelector('.step-num').textContent = '✓';
+          document.getElementById('stepLine').classList.add('done');
+          document.getElementById('step2indicator').classList.add('active');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          const errors = result.errors?.map(e => e.message).join(', ') || 'Error desconocido';
+          document.getElementById('errorContainer').innerHTML =
+            '<div class="error-msg">' + errors + '</div>';
+          btn.disabled = false;
+          btn.textContent = 'Siguiente';
+        }
+      } catch (err) {
+        document.getElementById('errorContainer').innerHTML =
+          '<div class="error-msg">Error de conexion. Intenta de nuevo.</div>';
+        btn.disabled = false;
+        btn.textContent = 'Siguiente';
+      }
+    });
+
+    // STEP 2: Cloudinary upload
+    function openUploadWidget() {
+      const cloudName = window._cloudinaryCloudName || 'demo';
+      const uploadPreset = window._cloudinaryPreset || 'docs_upload_example_us_preset';
+
+      if (typeof cloudinary === 'undefined') {
+        // Fallback: manual URL input if Cloudinary widget didn't load
+        const url = prompt('Pega el link de tu imagen (Google Drive, Dropbox, etc.):');
+        if (url && url.trim()) {
+          _uploadedUrls.push({ url: url.trim(), type: 'manual' });
+          renderUploaded();
+        }
+        return;
+      }
+
+      cloudinary.openUploadWidget({
+        cloudName: cloudName,
+        uploadPreset: uploadPreset,
+        sources: ['local', 'url', 'camera'],
+        multiple: true,
+        maxFiles: 10,
+        maxFileSize: 10000000,
+        clientAllowedFormats: ['jpg', 'jpeg', 'png', 'webp'],
+        showPoweredBy: false,
+        language: 'es',
+        text: {
+          'es': {
+            'or': 'o',
+            'menu': { 'files': 'Mis archivos', 'url': 'Pegar URL', 'camera': 'Camara' },
+            'local': { 'browse': 'Elegir archivos', 'dd_title_single': 'Arrastra una imagen aca', 'dd_title_multi': 'Arrastra imagenes aca' },
+          }
+        },
+        styles: {
+          palette: { window: '#141832', windowBorder: '#4f6ef7', tabIcon: '#4f6ef7', menuIcons: '#8b8fa3', textDark: '#000', textLight: '#fff', link: '#4f6ef7', action: '#4f6ef7', inactiveTabIcon: '#555', error: '#ff6b6b', inProgress: '#4f6ef7', complete: '#4ade80', sourceBg: '#0d1025' },
+        }
+      }, (error, result) => {
+        if (!error && result && result.event === 'success') {
+          _uploadedUrls.push({
+            url: result.info.secure_url,
+            thumbnail: result.info.thumbnail_url,
+            type: result.info.format,
+            name: result.info.original_filename,
+          });
+          renderUploaded();
+        }
+      });
+    }
+
+    function renderUploaded() {
+      const container = document.getElementById('uploadedImages');
+      container.innerHTML = _uploadedUrls.map((img, i) => `
+        <div class="uploaded-img">
+          <img src="${img.thumbnail || img.url}" alt="${img.name || 'Imagen'}">
+          <button class="remove-btn" onclick="removeImage(${i})">x</button>
+          <div class="img-label">${img.name || 'Imagen ' + (i+1)}</div>
+        </div>
+      `).join('');
+    }
+
+    function removeImage(index) {
+      _uploadedUrls.splice(index, 1);
+      renderUploaded();
+    }
+
+    // FINISH: Save images and show success
+    async function finishOnboarding() {
+      if (_uploadedUrls.length > 0 && _clientId) {
+        // Save uploaded URLs to client
+        const photoUrls = _uploadedUrls.map(u => u.url).join(',');
+        try {
+          await fetch('/api/creatives/assets/' + _clientId, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assets: _uploadedUrls.map((u, i) => ({
+                asset_type: i === 0 ? 'logo' : 'foto_negocio',
+                label: u.name || 'Imagen ' + (i+1),
+                url: u.url,
+              }))
+            }),
+          });
+        } catch (e) { console.error('Error saving assets:', e); }
+      }
+
+      // Show success
+      document.getElementById('formCard').style.display = 'none';
+      document.getElementById('step2Container').style.display = 'none';
+      document.getElementById('stepper').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+      document.getElementById('clientIdDisplay').textContent = 'ID: ' + (_clientId || '');
+    }
+
+    // Load Cloudinary config from server
+    fetch('/api/config/cloudinary').then(r => r.json()).then(d => {
+      window._cloudinaryCloudName = d.cloudName;
+      window._cloudinaryPreset = d.uploadPreset;
+    }).catch(() => {});
+  </script>
+</body>
+</html>

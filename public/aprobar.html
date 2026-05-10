@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vortis Media - Aprobar Anuncios</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
+    .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; letter-spacing: 1px; }
+    .main { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+
+    .intro { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+    .intro h2 { color: #fff; margin-bottom: 8px; }
+    .intro p { color: #8b8fa3; font-size: 0.9rem; line-height: 1.6; }
+    .intro .legal-note { margin-top: 12px; padding: 12px; background: #0d1025; border-radius: 8px; font-size: 0.8rem; color: #facc15; border-left: 3px solid #facc15; }
+
+    .progress { display: flex; gap: 8px; margin-bottom: 24px; }
+    .progress-item { flex: 1; background: #141832; border: 1px solid #1e2345; border-radius: 8px; padding: 12px; text-align: center; }
+    .progress-item .num { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .progress-item .lbl { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; }
+    .progress-item.approved .num { color: #4ade80; }
+    .progress-item.rejected .num { color: #ff6b6b; }
+    .progress-item.pending .num { color: #facc15; }
+
+    .ad-review { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; margin-bottom: 16px; transition: border-color 0.2s; }
+    .ad-review.done { opacity: 0.6; }
+    .ad-review .ad-number { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .ad-review .ad-headline { font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 10px; }
+    .ad-review .ad-body { font-size: 0.9rem; color: #b0b4cc; line-height: 1.7; margin-bottom: 12px; background: #0d1025; padding: 16px; border-radius: 10px; }
+    .ad-review .ad-cta-preview { display: inline-block; padding: 10px 24px; background: #4f6ef7; color: #fff; border-radius: 8px; font-size: 0.85rem; font-weight: 500; margin-bottom: 16px; }
+    .ad-review .ad-format { font-size: 0.75rem; color: #8b8fa3; margin-bottom: 16px; }
+
+    .ad-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .btn-approve { padding: 10px 24px; background: #0d9f4f; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-reject { padding: 10px 24px; background: #dc2626; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-approve:hover { background: #0a7f3f; }
+    .btn-reject:hover { background: #b91c1c; }
+    .btn-approve:disabled, .btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .feedback-input { flex: 1; min-width: 200px; padding: 10px 14px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 8px; color: #fff; font-size: 0.85rem; display: none; }
+    .feedback-input:focus { outline: none; border-color: #4f6ef7; }
+    .feedback-input.show { display: block; }
+
+    .ad-status-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .ad-status-badge.approved { background: #0d3320; color: #4ade80; }
+    .ad-status-badge.rejected { background: #2d1515; color: #ff6b6b; }
+
+    .approve-all { text-align: center; margin-top: 24px; }
+    .btn-approve-all { padding: 16px 40px; background: linear-gradient(135deg, #0d9f4f, #0a7f3f); border: none; border-radius: 12px; color: #fff; font-size: 1rem; font-weight: 700; cursor: pointer; }
+    .btn-approve-all:hover { box-shadow: 0 4px 20px rgba(13,159,79,0.3); }
+
+    .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px; border-radius: 8px; color: #ff6b6b; font-size: 0.9rem; text-align: center; }
+    .success-msg { background: #0d3320; border: 1px solid #1a5c38; padding: 24px; border-radius: 12px; text-align: center; margin-top: 24px; }
+    .success-msg h3 { color: #4ade80; margin-bottom: 8px; }
+    .success-msg p { color: #8b8fa3; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>VORTIS MEDIA</h1>
+  </div>
+
+  <div class="main">
+    <div class="intro">
+      <h2 id="clientName">Revisión de Anuncios</h2>
+      <p>Antes de publicar tus anuncios, necesitamos tu aprobación. Revisá cada anuncio y aprobá o rechazá con feedback.</p>
+      <div class="legal-note">
+        ⚠️ <strong>Importante:</strong> Al aprobar, autorizás a Vortis Media a publicar este contenido en Meta Ads en representación de tu negocio.
+      </div>
+    </div>
+
+    <div class="progress" id="progressBar">
+      <div class="progress-item approved"><div class="num" id="countApproved">0</div><div class="lbl">Aprobados</div></div>
+      <div class="progress-item rejected"><div class="num" id="countRejected">0</div><div class="lbl">Rechazados</div></div>
+      <div class="progress-item pending"><div class="num" id="countPending">0</div><div class="lbl">Pendientes</div></div>
+    </div>
+
+    <div id="adsContainer"></div>
+
+    <div class="approve-all" id="approveAllSection">
+      <button class="btn-approve-all" onclick="approveAll()">✓ Aprobar Todos los Anuncios</button>
+      <p style="color:#8b8fa3; font-size:0.8rem; margin-top:8px;">Esto aprueba todos los anuncios pendientes de una vez</p>
+    </div>
+
+    <div class="success-msg" id="successMsg" style="display:none;">
+      <h3>¡Todos los anuncios fueron aprobados!</h3>
+      <p>Tu campaña será activada en breve. Te notificaremos por WhatsApp y email cuando esté corriendo.</p>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const clientId = params.get('id');
+    if (!clientId) document.querySelector('.main').innerHTML = '<div class="error-msg">Falta el ID de cliente en la URL.</div>';
+    else loadApproval();
+
+    async function loadApproval() {
+      try {
+        const res = await fetch('/api/approval/' + clientId);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        document.getElementById('clientName').textContent = data.client.business_name + ' — Revisión de Anuncios';
+        document.getElementById('countApproved').textContent = data.summary.approved;
+        document.getElementById('countRejected').textContent = data.summary.rejected;
+        document.getElementById('countPending').textContent = data.summary.pending;
+
+        if (data.summary.pending === 0 && data.summary.total > 0) {
+          document.getElementById('approveAllSection').style.display = 'none';
+          document.getElementById('successMsg').style.display = 'block';
+        }
+
+        document.getElementById('adsContainer').innerHTML = data.ads.map((ad, i) => {
+          const isDone = ad.client_approved !== 0;
+          return `
+            <div class="ad-review ${isDone ? 'done' : ''}" id="ad-${ad.id}">
+              <div class="ad-number">Anuncio ${i + 1}</div>
+              <div class="ad-headline">${ad.headline}</div>
+              <div class="ad-body">${ad.description}</div>
+              <span class="ad-cta-preview">${ad.cta_text}</span>
+              <div class="ad-format">Formato: ${ad.format === 'story' ? 'Historia (9:16)' : 'Feed (1:1)'}</div>
+              ${isDone
+                ? `<span class="ad-status-badge ${ad.client_approved === 1 ? 'approved' : 'rejected'}">${ad.client_approved === 1 ? '✓ Aprobado' : '✗ Rechazado'}</span>
+                   ${ad.client_feedback ? '<p style="color:#8b8fa3;font-size:0.8rem;margin-top:8px;">Feedback: ' + ad.client_feedback + '</p>' : ''}`
+                : `<div class="ad-actions">
+                    <button class="btn-approve" onclick="approveAd('${ad.id}')">✓ Aprobar</button>
+                    <button class="btn-reject" onclick="showReject('${ad.id}')">✗ Rechazar</button>
+                    <input type="text" class="feedback-input" id="feedback-${ad.id}" placeholder="¿Qué cambiarías? (obligatorio al rechazar)">
+                    <button class="btn-reject" id="confirm-reject-${ad.id}" style="display:none;" onclick="rejectAd('${ad.id}')">Confirmar Rechazo</button>
+                  </div>`
+              }
+            </div>`;
+        }).join('');
+      } catch (err) {
+        document.getElementById('adsContainer').innerHTML = '<div class="error-msg">Error cargando anuncios: ' + (err.message || 'desconocido') + '</div>';
+      }
+    }
+
+    function showReject(adId) {
+      document.getElementById('feedback-' + adId).classList.add('show');
+      document.getElementById('confirm-reject-' + adId).style.display = 'inline-block';
+    }
+
+    async function approveAd(adId) {
+      const res = await fetch('/api/approval/' + clientId + '/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adId }),
+      });
+      if ((await res.json()).success) loadApproval();
+    }
+
+    async function rejectAd(adId) {
+      const feedback = document.getElementById('feedback-' + adId).value.trim();
+      if (!feedback) { alert('Escribí tu feedback para poder rechazar'); return; }
+      const res = await fetch('/api/approval/' + clientId + '/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adId, feedback }),
+      });
+      if ((await res.json()).success) loadApproval();
+    }
+
+    async function approveAll() {
+      if (!confirm('¿Estás seguro de aprobar TODOS los anuncios pendientes?')) return;
+      const res = await fetch('/api/approval/' + clientId + '/approve-all', { method: 'POST' });
+      if ((await res.json()).success) loadApproval();
+    }
+  </script>
+</body>
+</html>
