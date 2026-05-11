@@ -24,9 +24,39 @@ const FROM_NAME = 'Vortis Media';
 const FROM_EMAIL = process.env.SMTP_FROM || process.env.SMTP_USER || 'noreply@vortismedia.com';
 
 async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+  // Prefer Resend (works on Railway, no SMTP issues)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM || `${FROM_NAME} <onboarding@resend.dev>`,
+          to: [to],
+          subject,
+          html,
+        }),
+      });
+      const data: any = await res.json();
+      if (data.id) {
+        console.log(`[Resend] Sent to ${to}: "${subject}" (id=${data.id})`);
+        return true;
+      }
+      console.error(`[Resend] Error for ${to}:`, JSON.stringify(data));
+      return false;
+    } catch (err: any) {
+      console.error(`[Resend] Exception:`, err.message);
+      return false;
+    }
+  }
+
+  // Fallback to SMTP
   const transporter = getTransporter();
   if (!transporter) {
-    console.log(`[Email] SMTP not configured. Would send to ${to}: "${subject}"`);
+    console.log(`[Email] Neither Resend nor SMTP configured. Would send to ${to}: "${subject}"`);
     return false;
   }
 
@@ -37,10 +67,10 @@ async function sendEmail(to: string, subject: string, html: string): Promise<boo
       subject,
       html,
     });
-    console.log(`[Email] Sent to ${to}: "${subject}"`);
+    console.log(`[Email/SMTP] Sent to ${to}: "${subject}"`);
     return true;
   } catch (err: any) {
-    console.error(`[Email] Failed to send to ${to}:`, err.message);
+    console.error(`[Email/SMTP] Failed to send to ${to}:`, err.message);
     return false;
   }
 }
