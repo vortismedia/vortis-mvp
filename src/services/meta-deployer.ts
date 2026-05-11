@@ -62,7 +62,7 @@ export async function deployToMeta(campaignId: string): Promise<{
 
   // Step 4: Create Ads
   const metaAdIds: string[] = [];
-  const linkUrl = client.destination_url || `https://wa.me/${(client.contact_phone || '').replace(/\D/g, '')}`;
+  const linkUrl = normalizeLinkUrl(client.destination_url, client.contact_phone);
 
   const assets = await db.prepare(
     'SELECT url FROM client_assets WHERE client_id = ? ORDER BY uploaded_at'
@@ -148,6 +148,35 @@ async function resolveTargeting(targeting: any, client: any) {
   }
 
   return { ageMin, ageMax, genders, geoLocations, interests };
+}
+
+/**
+ * Returns a valid HTTPS URL for the ad's destination.
+ * Handles 3 cases:
+ * 1. destination_url is a valid URL → use it as-is
+ * 2. destination_url is a phone number (or empty) → fall back to wa.me link
+ * 3. No destination + no phone → use a placeholder Vortis page
+ */
+function normalizeLinkUrl(destinationUrl: string | null | undefined, contactPhone: string | null | undefined): string {
+  const dest = (destinationUrl || '').trim();
+
+  // Case 1: looks like a URL (starts with http or has a dot, no leading +)
+  if (dest && (dest.startsWith('http://') || dest.startsWith('https://'))) {
+    return dest;
+  }
+  if (dest && /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(dest) && !dest.match(/^\+?\d/)) {
+    return `https://${dest}`;
+  }
+
+  // Case 2: phone number — build wa.me URL
+  const phoneSource = dest.match(/^\+?\d{8,}/) ? dest : (contactPhone || '');
+  const digits = phoneSource.replace(/\D/g, '');
+  if (digits.length >= 8) {
+    return `https://wa.me/${digits}`;
+  }
+
+  // Case 3: no useful destination → safe placeholder
+  return 'https://vortismedia.com';
 }
 
 function countryCode(country: string): string {

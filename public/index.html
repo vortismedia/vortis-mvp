@@ -163,7 +163,7 @@
               <input type="text" name="price_range" placeholder="Ej: Desde $2.500.000">
             </div>
             <div class="form-group">
-              <label>URL destino (web o WhatsApp)</label>
+              <label>Sitio web (opcional - dejá vacío si usás solo WhatsApp)</label>
               <input type="text" name="destination_url" placeholder="https://tunegocio.com">
             </div>
           </div>
@@ -304,6 +304,12 @@
 
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData.entries());
+
+      // If the URL has ?cid=XXX (from a payment-simulate link), upsert that client
+      // instead of creating a new one. Critical to keep onboarding linked to payment.
+      const urlParams = new URLSearchParams(window.location.search);
+      const existingCid = urlParams.get('cid');
+      if (existingCid) data.client_id = existingCid;
 
       try {
         const res = await fetch('/api/onboarding', {
