@@ -4,6 +4,40 @@ dotenv.config();
 const META_API_VERSION = 'v21.0';
 const META_BASE_URL = `https://graph.facebook.com/${META_API_VERSION}`;
 
+// =========== ANTI-BAN PROTECTIONS ===========
+// Rate limiter: max 1 call every 2 seconds, plus exponential backoff on errors
+let lastCallTime = 0;
+const MIN_INTERVAL_MS = 2000; // 2s between Meta API calls (well below their rate limits)
+
+async function rateLimit(): Promise<void> {
+  const now = Date.now();
+  const elapsed = now - lastCallTime;
+  if (elapsed < MIN_INTERVAL_MS) {
+    const wait = MIN_INTERVAL_MS - elapsed;
+    await new Promise(r => setTimeout(r, wait));
+  }
+  lastCallTime = Date.now();
+}
+
+async function withRetry<T>(fn: () => Promise<T>, attempts: number = 3): Promise<T> {
+  let lastError: any;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      lastError = err;
+      const msg = err.message || '';
+      // Only retry on transient errors
+      const isTransient = msg.includes('rate limit') || msg.includes('temporarily') || msg.includes('try again') || msg.includes('timeout');
+      if (!isTransient || i === attempts - 1) throw err;
+      const backoff = Math.pow(2, i) * 5000; // 5s, 10s, 20s
+      console.log(`[Meta] Transient error, retrying in ${backoff}ms: ${msg}`);
+      await new Promise(r => setTimeout(r, backoff));
+    }
+  }
+  throw lastError;
+}
+
 function getAccessToken(): string {
   const token = process.env.META_ACCESS_TOKEN;
   if (!token) throw new Error('META_ACCESS_TOKEN not configured in .env');
@@ -25,6 +59,15 @@ function getPageId(): string {
 async function metaApiRequest(
   endpoint: string,
   method: 'GET' | 'POST' | 'DELETE' = 'GET',
+  body?: Record<string, any>
+): Promise<any> {
+  await rateLimit(); // Throttle ALL Meta API calls
+  return withRetry(async () => _doMetaRequest(endpoint, method, body));
+}
+
+async function _doMetaRequest(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'DELETE',
   body?: Record<string, any>
 ): Promise<any> {
   const url = `${META_BASE_URL}${endpoint}`;
