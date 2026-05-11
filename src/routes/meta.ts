@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { getDb } from '../db/database';
 import { deployToMeta } from '../services/meta-deployer';
 import { updateCampaignStatus, getCampaignInsights } from '../services/meta-ads';
-import { sendCampaignActiveEmail } from '../services/email';
+import { sendCampaignActiveToClient, sendCampaignActiveToAdmin } from '../services/email';
 import { sendCampaignActiveWhatsApp } from '../services/whatsapp';
 import { requireAuth } from './auth';
 
@@ -41,8 +41,9 @@ router.post('/:campaignId/activate', async (req, res) => {
 
     const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get<any>(campaign.client_id);
     if (client) {
-      sendCampaignActiveEmail({ contact_name: client.contact_name, contact_email: client.contact_email, business_name: client.business_name, id: client.id, access_token: client.access_token }).catch(() => {});
+      sendCampaignActiveToClient({ contact_name: client.contact_name, contact_email: client.contact_email, business_name: client.business_name, access_token: client.access_token }).catch(() => {});
       sendCampaignActiveWhatsApp({ contact_name: client.contact_name, contact_phone: client.contact_phone || '', business_name: client.business_name }).catch(() => {});
+      sendCampaignActiveToAdmin({ business_name: client.business_name, contact_name: client.contact_name, id: client.id }).catch(() => {});
     }
 
     res.json({ success: true, status: 'ACTIVE' });

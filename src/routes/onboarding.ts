@@ -4,7 +4,8 @@ import crypto from 'crypto';
 import { z } from 'zod';
 import { getDb } from '../db/database';
 import { orchestrateCampaignCreation } from '../agents/orchestrator';
-import { sendNewClientNotification } from '../services/email';
+// Admin already knows the client paid (from payment-simulate). Next admin notification
+// comes from the orchestrator when IA finishes: sendAdminReviewNotification.
 
 const router = Router();
 
@@ -100,16 +101,6 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     res.status(201).json({ success: true, clientId, accessToken, message: 'Onboarding recibido. Generando campaña...' });
-
-    // Notify admin (Vortis team) in background
-    sendNewClientNotification({
-      business_name: data.business_name,
-      industry: data.industry,
-      city: data.city,
-      contact_name: data.contact_name,
-      contact_email: data.contact_email,
-      id: clientId,
-    }).catch(() => {});
 
     // Run orchestration in background
     orchestrateCampaignCreation(clientId).catch(async (err) => {

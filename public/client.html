@@ -117,6 +117,19 @@
   </div>
 
   <div class="main">
+    <!-- Welcome screen (shown when entering via token URL) -->
+    <div id="welcomeScreen" class="lookup" style="display:none;">
+      <h2 id="welcomeName">Hola</h2>
+      <p>Vamos a llevarte a tu campaña en Vortis Media.</p>
+      <div style="background:#0d1025;border:1px solid #2a2f52;border-radius:10px;padding:16px;margin:20px auto;max-width:480px;text-align:left;">
+        <div style="font-size:0.75rem;color:#8b8fa3;text-transform:uppercase;margin-bottom:4px;">Cuenta a la que vas a acceder</div>
+        <div style="font-size:1rem;color:#fff;font-weight:600;" id="welcomeBiz">-</div>
+        <div style="font-size:0.85rem;color:#b0b4cc;margin-top:4px;" id="welcomeEmail">-</div>
+      </div>
+      <button onclick="confirmWelcome()" style="padding:14px 36px;background:linear-gradient(135deg,#4f6ef7,#3b5de7);border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer;font-size:0.95rem;">Continuar →</button>
+      <p style="color:#8b8fa3;font-size:0.75rem;margin-top:16px;">Si no sos vos, cerrá esta ventana.</p>
+    </div>
+
     <!-- Lookup -->
     <div id="lookupSection" class="lookup">
       <h2>Acceso a Mi Campaña</h2>
@@ -258,8 +271,34 @@
     const params = new URLSearchParams(window.location.search);
     const urlToken = params.get('token');
     if (urlToken) {
+      // Show welcome screen first, then user clicks "Continuar"
       document.getElementById('tokenInput').value = urlToken;
-      lookup();
+      document.getElementById('lookupSection').style.display = 'none';
+      preloadForWelcome();
+    }
+
+    async function preloadForWelcome() {
+      _token = urlToken;
+      try {
+        const res = await fetch('/api/public/me?token=' + encodeURIComponent(_token));
+        if (!res.ok) throw new Error();
+        _data = await res.json();
+        document.getElementById('welcomeName').textContent = 'Hola ' + _data.client.contact_name;
+        document.getElementById('welcomeBiz').textContent = _data.client.business_name;
+        document.getElementById('welcomeEmail').textContent = '(' + _data.client.campaign_objective + ')';
+        document.getElementById('welcomeScreen').style.display = 'block';
+      } catch {
+        document.getElementById('lookupSection').style.display = 'block';
+        document.getElementById('lookupError').innerHTML =
+          '<div class="error-msg">No pudimos encontrar tu campaña. Verificá tu link.</div>';
+      }
+    }
+
+    function confirmWelcome() {
+      document.getElementById('welcomeScreen').style.display = 'none';
+      document.getElementById('campaignView').style.display = 'block';
+      renderAll(_data);
+      if (window.location.hash === '#aprobar') showTab('aprobar');
     }
 
     async function lookup() {

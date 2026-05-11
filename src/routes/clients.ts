@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db/database';
-import { sendCampaignReadyEmail } from '../services/email';
+import { sendAdsReadyForApprovalWhatsApp } from '../services/whatsapp';
 import { requireAuth } from './auth';
 
 const router = Router();
@@ -39,24 +39,8 @@ router.get('/:id', async (req: Request, res: Response) => {
   res.json({ client, campaigns, ads });
 });
 
-// POST /api/clients/:id/notify-ready - Resend the "campaign ready" email
-router.post('/:id/notify-ready', async (req: Request, res: Response) => {
-  const db = getDb();
-  const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id) as any;
-  if (!client) return res.status(404).json({ error: 'Cliente no encontrado' });
-
-  const sent = await sendCampaignReadyEmail({
-    contact_name: client.contact_name,
-    contact_email: client.contact_email,
-    business_name: client.business_name,
-    id: client.id,
-    access_token: client.access_token,
-  });
-
-  res.json({ success: sent, email: client.contact_email });
-});
-
 // POST /api/clients/:id/admin-approve - Admin reviewed the AI output, OK to notify client
+// Sends WhatsApp (not email) to the client telling them their ads are ready to approve.
 router.post('/:id/admin-approve', async (req: Request, res: Response) => {
   const db = getDb();
   const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get(req.params.id) as any;
@@ -66,15 +50,14 @@ router.post('/:id/admin-approve', async (req: Request, res: Response) => {
     "UPDATE clients SET admin_reviewed = 1, admin_reviewed_at = NOW(), status = 'campaign_ready' WHERE id = ?"
   ).run(req.params.id);
 
-  const sent = await sendCampaignReadyEmail({
+  const waSent = await sendAdsReadyForApprovalWhatsApp({
     contact_name: client.contact_name,
-    contact_email: client.contact_email,
+    contact_phone: client.contact_phone,
     business_name: client.business_name,
-    id: client.id,
     access_token: client.access_token,
   });
 
-  res.json({ success: true, emailSent: sent });
+  res.json({ success: true, whatsappSent: waSent });
 });
 
 export default router;
