@@ -18,6 +18,7 @@ import creativesRoutes from './routes/creatives';
 import authRoutes, { requireAuth } from './routes/auth';
 import paymentRoutes from './routes/payment';
 import publicRoutes from './routes/public';
+import adminRoutes from './routes/admin';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
@@ -40,6 +41,7 @@ app.use('/api/consultant', consultantRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/creatives', creativesRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health (public)
 app.get('/api/health', (_req, res) => {
