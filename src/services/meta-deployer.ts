@@ -14,15 +14,15 @@ export async function deployToMeta(campaignId: string): Promise<{
 }> {
   const db = getDb();
 
-  const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaignId) as any;
+  const campaign = await db.prepare('SELECT * FROM campaigns WHERE id = ?').get<any>(campaignId);
   if (!campaign) throw new Error(`Campaign ${campaignId} not found`);
 
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(campaign.client_id) as any;
+  const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get<any>(campaign.client_id);
   if (!client) throw new Error(`Client ${campaign.client_id} not found`);
 
-  const ads = db.prepare(
+  const ads = await db.prepare(
     "SELECT * FROM ads WHERE campaign_id = ? AND validation_status = 'approved'"
-  ).all(campaignId) as any[];
+  ).all<any>(campaignId);
 
   if (ads.length === 0) throw new Error('No approved ads to deploy');
 
@@ -64,10 +64,9 @@ export async function deployToMeta(campaignId: string): Promise<{
   const metaAdIds: string[] = [];
   const linkUrl = client.destination_url || `https://wa.me/${(client.contact_phone || '').replace(/\D/g, '')}`;
 
-  // Get client uploaded images (Cloudinary URLs)
-  const assets = db.prepare(
+  const assets = await db.prepare(
     'SELECT url FROM client_assets WHERE client_id = ? ORDER BY uploaded_at'
-  ).all(client.id) as any[];
+  ).all<any>(client.id);
   const imageUrls = assets.map(a => a.url);
 
   for (let i = 0; i < ads.length; i++) {
@@ -87,24 +86,17 @@ export async function deployToMeta(campaignId: string): Promise<{
       status: 'PAUSED',
     });
 
-    db.prepare('UPDATE ads SET meta_ad_id = ? WHERE id = ?').run(metaAdId, ad.id);
+    await db.prepare('UPDATE ads SET meta_ad_id = ? WHERE id = ?').run(metaAdId, ad.id);
     metaAdIds.push(metaAdId);
     console.log(`  Ad ${i + 1} created: ${metaAdId}`);
   }
 
-  // Step 5: Update campaign record
-  db.prepare(
-    `UPDATE campaigns SET
-      meta_campaign_id = ?,
-      meta_adset_id = ?,
-      meta_status = 'PAUSED',
-      status = 'deployed',
-      updated_at = datetime('now')
-     WHERE id = ?`
+  await db.prepare(
+    `UPDATE campaigns SET meta_campaign_id = ?, meta_adset_id = ?, meta_status = 'PAUSED', status = 'deployed', updated_at = NOW() WHERE id = ?`
   ).run(metaCampaignId, metaAdSetId, campaignId);
 
-  db.prepare(
-    "UPDATE clients SET status = 'deployed', updated_at = datetime('now') WHERE id = ?"
+  await db.prepare(
+    "UPDATE clients SET status = 'deployed', updated_at = NOW() WHERE id = ?"
   ).run(client.id);
 
   console.log(`[Meta Deploy] DONE! Campaign deployed as PAUSED.`);

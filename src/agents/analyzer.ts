@@ -37,15 +37,15 @@ Formato de respuesta:
 }
 \`\`\``;
 
-function getRelevantKnowledge(industry: string): string {
+async function getRelevantKnowledge(industry: string): Promise<string> {
   const db = getDb();
-  const rows = db
+  const rows = await db
     .prepare(
       `SELECT content FROM knowledge_base
        WHERE industry = ? OR industry = 'general'
        ORDER BY category`
     )
-    .all(industry) as { content: string }[];
+    .all<{ content: string }>(industry);
   if (rows.length === 0) return '';
   return '\n\nBase de conocimiento relevante:\n' + rows.map((r) => `- ${r.content}`).join('\n');
 }
@@ -62,7 +62,7 @@ export async function analyzeClient(clientData: {
   campaign_objective: string;
   brand_tone: string;
 }): Promise<AgentResult> {
-  const knowledge = getRelevantKnowledge(clientData.industry);
+  const knowledge = await getRelevantKnowledge(clientData.industry);
 
   const userMessage = `Analiza este negocio para crear una campaña de Meta Ads:
 

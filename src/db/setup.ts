@@ -1,7 +1,9 @@
-import { getDb } from './database';
-import { v4 as uuid } from 'uuid';
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-const db = getDb();
+import { getDb, initializeSchema } from './database';
+import { v4 as uuid } from 'uuid';
 
 const sampleKnowledge = [
   {
@@ -61,22 +63,30 @@ const sampleKnowledge = [
   },
 ];
 
-const insert = db.prepare(`
-  INSERT INTO knowledge_base (id, category, industry, content)
-  VALUES (?, ?, ?, ?)
-`);
+async function main() {
+  await initializeSchema();
+  const db = getDb();
 
-const existing = db.prepare('SELECT COUNT(*) as count FROM knowledge_base').get() as { count: number };
-if (existing.count === 0) {
-  const insertMany = db.transaction(() => {
+  const existing = await db.prepare('SELECT COUNT(*) as count FROM knowledge_base').get<{ count: string }>();
+  const count = parseInt(String(existing?.count || '0'), 10);
+
+  if (count === 0) {
+    const insert = db.prepare(
+      `INSERT INTO knowledge_base (id, category, industry, content) VALUES (?, ?, ?, ?)`
+    );
     for (const item of sampleKnowledge) {
-      insert.run(uuid(), item.category, item.industry, item.content);
+      await insert.run(uuid(), item.category, item.industry, item.content);
     }
-  });
-  insertMany();
-  console.log(`Loaded ${sampleKnowledge.length} knowledge base entries.`);
-} else {
-  console.log(`Knowledge base already has ${existing.count} entries.`);
+    console.log(`Loaded ${sampleKnowledge.length} knowledge base entries.`);
+  } else {
+    console.log(`Knowledge base already has ${count} entries.`);
+  }
+
+  console.log('Database setup complete.');
+  process.exit(0);
 }
 
-console.log('Database setup complete.');
+main().catch((err) => {
+  console.error('[Setup] Error:', err);
+  process.exit(1);
+});

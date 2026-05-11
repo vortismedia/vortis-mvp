@@ -1,14 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { v4 as uuid } from 'uuid';
+import crypto from 'crypto';
 import { getDb } from '../db/database';
 import { sendCampaignReadyEmail } from '../services/email';
+import { requireAuth } from './auth';
 import nodemailer from 'nodemailer';
 import dns from 'dns';
 
-// Force IPv4 globally (Railway has issues with IPv6 to Gmail)
 dns.setDefaultResultOrder('ipv4first');
 
+function generateAccessToken(): string {
+  return crypto.randomBytes(32).toString('base64url');
+}
+
 const router = Router();
+// Payment-simulate is admin only (only Vortis can mark someone as paid)
+router.use(requireAuth);
 
 /**
  * POST /api/payment/simulate
@@ -35,17 +42,17 @@ router.post('/simulate', async (req: Request, res: Response) => {
 
     const db = getDb();
     const clientId = uuid();
+    const accessToken = generateAccessToken();
 
-    // Create a "pending onboarding" client record
-    db.prepare(
+    await db.prepare(
       `INSERT INTO clients (
-        id, business_name, industry, city, country, product_service,
+        id, access_token, business_name, industry, city, country, product_service,
         campaign_objective, contact_email, contact_phone, contact_name,
         payment_status, plan_price_usd, status
-      ) VALUES (?, ?, 'pending', 'pending', 'Argentina', 'Pendiente onboarding',
+      ) VALUES (?, ?, ?, 'pending', 'pending', 'Argentina', 'Pendiente onboarding',
                 'Mensajes por WhatsApp', ?, ?, ?, 'paid', ?, 'paid_pending_onboarding')`
     ).run(
-      clientId,
+      clientId, accessToken,
       business_name,
       contact_email,
       contact_phone || '',
@@ -54,7 +61,8 @@ router.post('/simulate', async (req: Request, res: Response) => {
     );
 
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
-    const onboardingLink = `${appUrl}/?id=${clientId}`;
+    // Onboarding link includes both clientId (for upsert) and token (for secure dashboard later)
+    const onboardingLink = `${appUrl}/?cid=${clientId}&token=${accessToken}`;
 
     // Run email + WhatsApp in parallel with timeouts so one doesn't block the other
     const withTimeout = <T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> =>

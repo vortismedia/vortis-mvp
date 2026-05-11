@@ -46,7 +46,7 @@ export async function runAgent(params: {
     const durationMs = Date.now() - start;
 
     const db = getDb();
-    db.prepare(
+    await db.prepare(
       `INSERT INTO agent_logs (id, client_id, campaign_id, agent_name, input_data, output_data, tokens_used, duration_ms, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'success')`
     ).run(
@@ -74,7 +74,7 @@ export async function runAgent(params: {
   } catch (error: any) {
     const durationMs = Date.now() - start;
     const db = getDb();
-    db.prepare(
+    await db.prepare(
       `INSERT INTO agent_logs (id, client_id, campaign_id, agent_name, input_data, tokens_used, duration_ms, status, error_message)
        VALUES (?, ?, ?, ?, ?, 0, ?, 'error', ?)`
     ).run(

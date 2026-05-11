@@ -5,8 +5,7 @@ import { generateCopies } from './copywriter';
 import { defineSegmentation } from './segmenter';
 import { validateAds } from './validator';
 import { recommendBudget } from './budget';
-import { sendCampaignReadyEmail } from '../services/email';
-import { sendWelcomeWhatsApp } from '../services/whatsapp';
+// Email/WhatsApp notifications happen on admin approval, not auto-fire
 import {
   getMockAnalysis,
   getMockCopies,
@@ -28,11 +27,11 @@ export interface OrchestrationResult {
 
 export async function orchestrateCampaignCreation(clientId: string): Promise<OrchestrationResult> {
   const db = getDb();
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(clientId) as any;
+  const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get<any>(clientId);
   if (!client) throw new Error(`Client ${clientId} not found`);
 
   const campaignId = uuid();
-  db.prepare(
+  await db.prepare(
     `INSERT INTO campaigns (id, client_id, status) VALUES (?, ?, 'generating')`
   ).run(campaignId, clientId);
 
@@ -171,20 +170,9 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
   }
 
   // Save results to campaign
-  db.prepare(
-    `UPDATE campaigns SET
-      business_analysis = ?,
-      targeting_config = ?,
-      budget_config = ?,
-      status = 'ready',
-      updated_at = datetime('now')
-     WHERE id = ?`
-  ).run(
-    JSON.stringify(analysis),
-    JSON.stringify(segmentation),
-    JSON.stringify(budget),
-    campaignId
-  );
+  await db.prepare(
+    `UPDATE campaigns SET business_analysis = ?, targeting_config = ?, budget_config = ?, status = 'ready', updated_at = NOW() WHERE id = ?`
+  ).run(JSON.stringify(analysis), JSON.stringify(segmentation), JSON.stringify(budget), campaignId);
 
   // Save ads
   const validatedAds = copies?.ads || [];
@@ -200,10 +188,8 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
     const val = validations[i];
     const isApproved = val?.status === 'APROBADO' || val?.status === 'AJUSTADO';
 
-    insertAd.run(
-      uuid(),
-      campaignId,
-      clientId,
+    await insertAd.run(
+      uuid(), campaignId, clientId,
       val?.corrected_headline || ad.headline,
       val?.corrected_body || ad.body,
       ad.cta_text || 'Enviar mensaje',
@@ -213,25 +199,20 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
     );
   }
 
-  // Update client status
-  db.prepare(
-    `UPDATE clients SET status = 'campaign_ready', updated_at = datetime('now') WHERE id = ?`
+  // Client status: pending_admin_review (NOT campaign_ready yet — admin must approve first)
+  await db.prepare(
+    `UPDATE clients SET status = 'pending_admin_review', updated_at = NOW() WHERE id = ?`
   ).run(clientId);
 
-  // Notify client by email + WhatsApp
-  sendCampaignReadyEmail({
-    contact_name: client.contact_name,
-    contact_email: client.contact_email,
+  // Notify ADMIN (Vortis team) that there's a campaign to review.
+  // The client gets notified ONLY after admin approves.
+  const { sendAdminReviewNotification } = await import('../services/email');
+  sendAdminReviewNotification({
     business_name: client.business_name,
-    id: client.id,
-  }).catch(err => console.error('[Orchestrator] Email notification failed:', err));
-
-  sendWelcomeWhatsApp({
     contact_name: client.contact_name,
-    contact_phone: client.contact_phone || '',
-    business_name: client.business_name,
+    industry: client.industry,
     id: client.id,
-  }).catch(err => console.error('[Orchestrator] WhatsApp notification failed:', err));
+  }).catch((err) => console.error('[Orchestrator] Admin notify failed:', err));
 
   console.log(`\n[Orchestrator] DONE!`);
   console.log(`  Total tokens: ${totalTokens}`);

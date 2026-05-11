@@ -10,455 +10,451 @@
 
     .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
     .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; letter-spacing: 1px; }
-    .header .nav-links { display: flex; gap: 16px; }
-    .header .nav-links a { color: #4f6ef7; text-decoration: none; font-size: 0.85rem; }
 
-    .main { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+    .main { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
 
-    /* Lookup */
+    /* Lookup (when no token) */
     .lookup { background: #141832; border: 1px solid #1e2345; border-radius: 16px; padding: 48px; text-align: center; }
     .lookup h2 { color: #fff; margin-bottom: 8px; font-size: 1.5rem; }
     .lookup p { color: #8b8fa3; margin-bottom: 24px; font-size: 0.9rem; }
     .lookup-form { display: flex; gap: 12px; max-width: 500px; margin: 0 auto; }
-    .lookup-form input { flex: 1; padding: 14px 18px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; color: #fff; font-size: 1rem; }
-    .lookup-form input:focus { outline: none; border-color: #4f6ef7; }
-    .lookup-form button { padding: 14px 28px; background: linear-gradient(135deg, #4f6ef7, #3b5de7); border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-    .lookup-form button:hover { box-shadow: 0 4px 20px rgba(79,110,247,0.3); }
+    .lookup-form input { flex: 1; padding: 14px 18px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; color: #fff; font-size: 0.95rem; }
+    .lookup-form button { padding: 14px 28px; background: linear-gradient(135deg, #4f6ef7, #3b5de7); border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; }
 
-    /* Campaign View */
+    /* Campaign view */
     .campaign-view { display: none; }
 
-    /* Status */
-    .status-banner { background: linear-gradient(135deg, #141832, #1a1f45); border: 1px solid #2a2f52; border-radius: 16px; padding: 28px 32px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px; }
+    /* Hero status banner */
+    .status-banner { background: linear-gradient(135deg, #141832, #1a1f45); border: 1px solid #2a2f52; border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+    .status-banner .top { display: flex; align-items: center; gap: 20px; margin-bottom: 16px; }
     .status-icon { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0; }
-    .status-icon.generating { background: #2d2a0d; }
-    .status-icon.ready { background: #0d3320; }
-    .status-icon.active { background: #0d3320; }
-    .status-icon.deployed { background: #0d1a33; }
+    .status-icon.gen { background: #2d2a0d; } .status-icon.ready { background: #0d3320; }
+    .status-icon.act { background: #0d3320; } .status-icon.deploy { background: #0d1a33; }
     .status-info h2 { color: #fff; font-size: 1.3rem; }
-    .status-info p { color: #8b8fa3; font-size: 0.9rem; margin-top: 4px; }
-    .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; margin-left: auto; flex-shrink: 0; }
+    .status-info p { color: #b0b4cc; font-size: 0.9rem; margin-top: 4px; }
+    .status-badge { padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .status-badge.ready { background: #0d3320; color: #4ade80; }
-    .status-badge.active { background: #0d3320; color: #4ade80; }
-    .status-badge.generating { background: #2d2a0d; color: #facc15; }
-    .status-badge.deployed { background: #0d1a33; color: #60a5fa; }
+    .status-badge.act { background: #0d3320; color: #4ade80; }
+    .status-badge.gen { background: #2d2a0d; color: #facc15; }
+    .status-badge.deploy { background: #0d1a33; color: #60a5fa; }
+
+    .progress-stepper { display: flex; gap: 12px; margin-top: 16px; }
+    .step-item { flex: 1; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; text-align: center; font-size: 0.75rem; color: #8b8fa3; }
+    .step-item.active { background: rgba(79,110,247,0.2); color: #4f6ef7; border: 1px solid #4f6ef7; }
+    .step-item.done { background: rgba(74,222,128,0.1); color: #4ade80; }
 
     /* Metrics */
-    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-    .metric { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; text-align: center; transition: transform 0.15s, border-color 0.15s; cursor: default; }
-    .metric:hover { transform: translateY(-2px); border-color: #4f6ef7; }
-    .metric .icon { font-size: 1.4rem; margin-bottom: 8px; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+    .metric { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; text-align: center; }
     .metric .num { font-size: 2rem; font-weight: 700; color: #fff; }
-    .metric .lbl { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
-    .metric .sub { font-size: 0.75rem; color: #4f6ef7; margin-top: 4px; }
+    .metric .lbl { font-size: 0.75rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
 
     /* Tabs */
     .tabs { display: flex; gap: 4px; margin-bottom: 24px; background: #141832; border-radius: 12px; padding: 4px; border: 1px solid #1e2345; }
     .tab { flex: 1; padding: 12px 16px; text-align: center; border-radius: 8px; font-size: 0.85rem; font-weight: 500; color: #8b8fa3; cursor: pointer; transition: all 0.2s; }
-    .tab:hover { color: #b0b4cc; }
     .tab.active { background: #4f6ef7; color: #fff; }
+    .tab.has-action { color: #facc15; }
+    .tab.has-action::after { content: ' •'; color: #facc15; }
 
-    /* Sections */
-    .section { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 28px; margin-bottom: 24px; }
-    .section h3 { color: #fff; margin-bottom: 16px; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-    .section h3 .badge { background: #4f6ef7; color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; }
-
-    /* Tab content */
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* Cards */
+    .card { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+    .card h3 { color: #fff; margin-bottom: 14px; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    .card .badge { background: #4f6ef7; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 0.7rem; }
+
     /* Ads */
-    .ad-preview { background: #0d1025; border: 1px solid #2a2f52; border-radius: 12px; padding: 20px; margin-bottom: 14px; transition: border-color 0.2s; }
-    .ad-preview:hover { border-color: #4f6ef7; }
-    .ad-preview .ad-label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .ad-preview .ad-head { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
-    .ad-preview .ad-desc { font-size: 0.85rem; color: #b0b4cc; line-height: 1.6; margin-bottom: 12px; }
-    .ad-preview .ad-footer { display: flex; justify-content: space-between; align-items: center; }
-    .ad-preview .ad-cta { display: inline-block; padding: 8px 20px; background: #4f6ef7; color: #fff; border-radius: 8px; font-size: 0.8rem; font-weight: 500; }
-    .ad-status { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; }
+    .ad-row { background: #0d1025; border: 1px solid #2a2f52; border-radius: 12px; padding: 20px; margin-bottom: 14px; transition: border 0.2s; }
+    .ad-row:hover { border-color: #4f6ef7; }
+    .ad-row.done { opacity: 0.7; }
+    .ad-row .ad-num { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 1px; }
+    .ad-row .ad-head { font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 8px; }
+    .ad-row .ad-desc { font-size: 0.85rem; color: #b0b4cc; line-height: 1.6; margin-bottom: 14px; }
+    .ad-row .ad-cta-preview { display: inline-block; padding: 8px 18px; background: #4f6ef7; color: #fff; border-radius: 8px; font-size: 0.8rem; margin-bottom: 12px; }
+    .ad-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-approve { background: #0d9f4f; color: #fff; }
+    .btn-reject { background: #dc2626; color: #fff; }
+    .btn-primary { background: #4f6ef7; color: #fff; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ad-status { padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .ad-status.approved { background: #0d3320; color: #4ade80; }
     .ad-status.rejected { background: #2d1515; color: #ff6b6b; }
+    .feedback-input { flex: 1; min-width: 200px; padding: 10px 14px; background: #141832; border: 1px solid #2a2f52; border-radius: 8px; color: #fff; font-size: 0.85rem; display: none; }
+    .feedback-input.show { display: block; }
 
-    /* Targeting */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .info-item { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 16px; }
-    .info-item .info-label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .info-item .info-value { font-size: 0.95rem; color: #fff; }
+    /* Big CTA */
+    .big-cta { text-align: center; padding: 30px; background: linear-gradient(135deg, #0d3320, #0a7f3f); border-radius: 14px; margin: 24px 0; }
+    .big-cta button { padding: 16px 40px; background: rgba(255,255,255,0.95); color: #0a7f3f; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; font-size: 1rem; }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+    .info-item { background: #0d1025; border-radius: 8px; padding: 14px; }
+    .info-item .label { font-size: 0.7rem; color: #8b8fa3; text-transform: uppercase; }
+    .info-item .value { font-size: 0.95rem; color: #fff; margin-top: 4px; }
 
     /* Chat */
-    .chat-container { background: #0d1025; border: 1px solid #2a2f52; border-radius: 14px; overflow: hidden; }
-    .chat-header { background: #141832; padding: 16px 20px; border-bottom: 1px solid #2a2f52; display: flex; align-items: center; gap: 12px; }
-    .chat-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, #4f6ef7, #3b5de7); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-    .chat-header-info h4 { color: #fff; font-size: 0.9rem; }
-    .chat-header-info p { color: #4ade80; font-size: 0.75rem; }
-    .chat-messages { height: 400px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-    .chat-msg { max-width: 85%; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; line-height: 1.6; }
-    .chat-msg.bot { background: #141832; color: #e0e0e0; align-self: flex-start; border-bottom-left-radius: 4px; }
-    .chat-msg.user { background: #4f6ef7; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-    .chat-msg .msg-time { font-size: 0.65rem; color: #8b8fa3; margin-top: 6px; }
-    .chat-msg.bot .msg-time { color: #8b8fa3; }
-    .chat-msg.user .msg-time { color: rgba(255,255,255,0.6); }
-    .chat-recs { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2f52; }
-    .chat-rec { font-size: 0.8rem; color: #8fa4ff; padding: 4px 0; }
-    .chat-rec::before { content: '💡 '; }
-    .chat-input-area { display: flex; gap: 8px; padding: 16px; border-top: 1px solid #2a2f52; background: #141832; }
-    .chat-input-area input { flex: 1; padding: 12px 16px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; color: #fff; font-size: 0.9rem; }
-    .chat-input-area input:focus { outline: none; border-color: #4f6ef7; }
-    .chat-input-area button { padding: 12px 24px; background: #4f6ef7; border: none; border-radius: 10px; color: #fff; font-weight: 600; cursor: pointer; }
-    .chat-input-area button:disabled { opacity: 0.5; cursor: not-allowed; }
-    .chat-suggestions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px 12px; }
-    .chat-suggestion { padding: 6px 14px; background: #1a1f45; border: 1px solid #2a2f52; border-radius: 20px; color: #b0b4cc; font-size: 0.75rem; cursor: pointer; transition: all 0.15s; }
+    .chat-container { background: #0d1025; border-radius: 14px; overflow: hidden; }
+    .chat-msgs { height: 350px; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .chat-msg { max-width: 85%; padding: 12px 14px; border-radius: 10px; font-size: 0.85rem; line-height: 1.5; }
+    .chat-msg.bot { background: #141832; color: #e0e0e0; align-self: flex-start; }
+    .chat-msg.user { background: #4f6ef7; color: #fff; align-self: flex-end; }
+    .chat-input { display: flex; gap: 8px; padding: 12px; background: #141832; border-top: 1px solid #2a2f52; }
+    .chat-input input { flex: 1; padding: 10px 14px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 8px; color: #fff; }
+    .chat-input button { padding: 10px 20px; background: #4f6ef7; border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; }
+    .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 12px; }
+    .chat-suggestion { padding: 6px 12px; background: #141832; border: 1px solid #2a2f52; border-radius: 20px; color: #b0b4cc; font-size: 0.75rem; cursor: pointer; }
     .chat-suggestion:hover { border-color: #4f6ef7; color: #fff; }
-    .typing-indicator { display: none; align-self: flex-start; padding: 12px 16px; background: #141832; border-radius: 12px; }
-    .typing-indicator span { display: inline-block; width: 6px; height: 6px; background: #8b8fa3; border-radius: 50%; margin: 0 2px; animation: typing 1.2s infinite; }
-    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes typing { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
 
-    /* Budget visualization */
-    .budget-bar { background: #0d1025; border-radius: 8px; height: 32px; position: relative; overflow: hidden; margin: 8px 0; }
-    .budget-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; color: #fff; transition: width 0.5s; }
-    .budget-fill.fee { background: linear-gradient(90deg, #4f6ef7, #3b5de7); }
-    .budget-fill.ads { background: linear-gradient(90deg, #0d9f4f, #0a7f3f); }
+    .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px; border-radius: 8px; color: #ff6b6b; text-align: center; margin-top: 16px; }
 
-    .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px 16px; border-radius: 8px; color: #ff6b6b; font-size: 0.9rem; text-align: center; margin-top: 16px; }
-
-    @media (max-width: 768px) {
-      .metrics { grid-template-columns: 1fr 1fr; }
-      .info-grid { grid-template-columns: 1fr; }
-      .tabs { flex-wrap: wrap; }
-      .status-banner { flex-direction: column; text-align: center; }
-      .status-badge { margin-left: 0; }
-    }
-    @media (max-width: 480px) {
-      .lookup-form { flex-direction: column; }
-      .chat-messages { height: 300px; }
-    }
+    @media (max-width: 768px) { .metrics { grid-template-columns: 1fr; } .info-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>VORTIS MEDIA</h1>
-    <div class="nav-links">
-      <a href="/">Nuevo Onboarding</a>
-    </div>
   </div>
 
   <div class="main">
     <!-- Lookup -->
     <div id="lookupSection" class="lookup">
-      <h2>Tu Campaña Inteligente</h2>
-      <p>Ingresá tu ID de cliente para acceder a tu dashboard personalizado.</p>
+      <h2>Acceso a Mi Campaña</h2>
+      <p>Ingresá tu link único o el token que te enviamos por email.</p>
       <div class="lookup-form">
-        <input type="text" id="clientIdInput" placeholder="Pegá tu ID acá">
-        <button onclick="lookupCampaign()">Acceder</button>
+        <input type="text" id="tokenInput" placeholder="Pegá tu token de acceso">
+        <button onclick="lookup()">Acceder</button>
       </div>
       <div id="lookupError"></div>
     </div>
 
-    <!-- Campaign View -->
+    <!-- Campaign view (loaded by token) -->
     <div id="campaignView" class="campaign-view">
-      <!-- Status Banner -->
+      <!-- Status -->
       <div class="status-banner">
-        <div class="status-icon" id="statusIcon">⏳</div>
-        <div class="status-info">
-          <h2 id="businessName">-</h2>
-          <p id="statusText">Cargando...</p>
+        <div class="top">
+          <div class="status-icon" id="statusIcon">⏳</div>
+          <div class="status-info" style="flex:1;">
+            <h2 id="businessName">-</h2>
+            <p id="statusText">Cargando...</p>
+          </div>
+          <span class="status-badge gen" id="statusBadge">CARGANDO</span>
         </div>
-        <span class="status-badge generating" id="statusBadge">CARGANDO</span>
+        <div class="progress-stepper" id="progressStepper"></div>
+      </div>
+
+      <!-- Big CTA when approval needed -->
+      <div id="approvalCta" style="display:none;">
+        <div class="big-cta">
+          <h3 style="color:#fff;margin-bottom:10px;">📋 Necesitamos que revises tus anuncios</h3>
+          <p style="color:rgba(255,255,255,0.85);margin-bottom:14px;font-size:0.9rem;">Aprobá o rechazá cada anuncio antes de que los publiquemos.</p>
+          <button onclick="showTab('aprobar')">Revisar Anuncios →</button>
+        </div>
       </div>
 
       <!-- Metrics -->
       <div class="metrics">
         <div class="metric">
-          <div class="icon">👁</div>
-          <div class="num" id="metricImpressions">-</div>
+          <div class="num" id="mImp">-</div>
           <div class="lbl">Impresiones</div>
-          <div class="sub" id="metricCPM"></div>
         </div>
         <div class="metric">
-          <div class="icon">👆</div>
-          <div class="num" id="metricClicks">-</div>
+          <div class="num" id="mClicks">-</div>
           <div class="lbl">Clicks</div>
-          <div class="sub" id="metricCTR"></div>
         </div>
         <div class="metric">
-          <div class="icon">💬</div>
-          <div class="num" id="metricMessages">-</div>
+          <div class="num" id="mMsg">-</div>
           <div class="lbl">Mensajes</div>
-          <div class="sub" id="metricCostPerMsg"></div>
-        </div>
-        <div class="metric">
-          <div class="icon">💰</div>
-          <div class="num" id="metricSpend">-</div>
-          <div class="lbl">Invertido</div>
-          <div class="sub" id="metricBudgetLeft"></div>
         </div>
       </div>
 
       <!-- Tabs -->
       <div class="tabs">
-        <div class="tab active" onclick="showTab('chat')">💬 Consultor IA</div>
-        <div class="tab" onclick="showTab('ads')">📝 Anuncios</div>
-        <div class="tab" onclick="showTab('targeting')">🎯 Segmentación</div>
-        <div class="tab" onclick="showTab('budget')">📊 Presupuesto</div>
+        <div class="tab active" id="tabBtnEstado" onclick="showTab('estado')">📊 Estado</div>
+        <div class="tab" id="tabBtnAprobar" onclick="showTab('aprobar')">✅ Aprobar Anuncios</div>
+        <div class="tab" id="tabBtnChat" onclick="showTab('chat')">💬 Consultor IA</div>
+        <div class="tab" id="tabBtnInversion" onclick="showTab('inversion')">💰 Tu Inversión</div>
       </div>
 
-      <!-- Chat Tab -->
-      <div id="tab-chat" class="tab-content active">
-        <div class="chat-container">
-          <div class="chat-header">
-            <div class="chat-avatar">🤖</div>
-            <div class="chat-header-info">
-              <h4>Consultor Vortis IA</h4>
-              <p>En línea</p>
-            </div>
+      <!-- ESTADO TAB -->
+      <div id="tab-estado" class="tab-content active">
+        <div class="card">
+          <h3>📋 Resumen</h3>
+          <div class="info-grid">
+            <div class="info-item"><div class="label">Negocio</div><div class="value" id="infoBiz">-</div></div>
+            <div class="info-item"><div class="label">Ciudad</div><div class="value" id="infoCity">-</div></div>
+            <div class="info-item"><div class="label">Objetivo</div><div class="value" id="infoObj">-</div></div>
+            <div class="info-item"><div class="label">Anuncios totales</div><div class="value" id="infoAds">-</div></div>
           </div>
-          <div class="chat-messages" id="chatMessages">
-            <div class="chat-msg bot">
-              ¡Hola! Soy tu consultor de campaña. Preguntame lo que quieras sobre tu publicidad: presupuesto, métricas, segmentación, horarios, o cualquier duda.
-              <div class="msg-time">Ahora</div>
-            </div>
-          </div>
-          <div class="chat-suggestions">
-            <span class="chat-suggestion" onclick="askQuestion('¿Cómo van mis resultados?')">📊 Mis resultados</span>
-            <span class="chat-suggestion" onclick="askQuestion('¿Qué pasa si aumento el presupuesto 30%?')">💰 Subir presupuesto</span>
-            <span class="chat-suggestion" onclick="askQuestion('¿Cuál es el mejor horario?')">🕐 Mejor horario</span>
-            <span class="chat-suggestion" onclick="askQuestion('¿A quién le estamos mostrando los anuncios?')">🎯 Mi audiencia</span>
-            <span class="chat-suggestion" onclick="askQuestion('¿Cómo están mis anuncios?')">📝 Mis anuncios</span>
-          </div>
-          <div class="chat-input-area">
-            <input type="text" id="chatInput" placeholder="Escribí tu pregunta..." onkeypress="if(event.key==='Enter')sendChat()">
-            <button onclick="sendChat()" id="chatSendBtn">Enviar</button>
-          </div>
+        </div>
+
+        <div class="card">
+          <h3>🚀 Próximos pasos</h3>
+          <div id="nextSteps" style="color:#b0b4cc;line-height:1.7;font-size:0.9rem;"></div>
         </div>
       </div>
 
-      <!-- Ads Tab -->
-      <div id="tab-ads" class="tab-content">
-        <div class="section" style="border:none;padding:0;background:none;">
-          <h3>Tus Anuncios <span class="badge" id="adsCount">0</span></h3>
+      <!-- APROBAR TAB -->
+      <div id="tab-aprobar" class="tab-content">
+        <div class="card">
+          <h3>Revisión de Anuncios <span class="badge" id="approvalCount">0/0</span></h3>
+          <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:16px;">
+            Antes de publicar tu campaña en Meta Ads, necesitamos tu OK en cada anuncio.
+            Si querés cambiar algo, rechazalo con un comentario y lo ajustamos.
+          </p>
           <div id="adsContainer"><p style="color:#8b8fa3;">Cargando anuncios...</p></div>
+          <div style="text-align:center;margin-top:20px;" id="approveAllSection">
+            <button class="btn btn-approve" onclick="approveAll()">✓ Aprobar Todos los Pendientes</button>
+          </div>
         </div>
       </div>
 
-      <!-- Targeting Tab -->
-      <div id="tab-targeting" class="tab-content">
-        <div class="section" style="border:none;padding:0;background:none;">
-          <h3>Segmentación de tu Campaña</h3>
-          <div class="info-grid" id="targetingGrid"></div>
+      <!-- CHAT TAB -->
+      <div id="tab-chat" class="tab-content">
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div class="chat-container">
+            <div class="chat-msgs" id="chatMsgs">
+              <div class="chat-msg bot">¡Hola! Soy tu consultor de Vortis. Preguntame lo que quieras sobre tu campaña.</div>
+            </div>
+            <div class="chat-suggestions">
+              <span class="chat-suggestion" onclick="askQ('¿Cómo van mis resultados?')">📊 Resultados</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cuál es el mejor horario?')">🕐 Mejor horario</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo están mis anuncios?')">📝 Mis anuncios</span>
+            </div>
+            <div class="chat-input">
+              <input type="text" id="chatIn" placeholder="Escribí tu pregunta..." onkeypress="if(event.key==='Enter')sendChat()">
+              <button onclick="sendChat()">Enviar</button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Budget Tab -->
-      <div id="tab-budget" class="tab-content">
-        <div class="section" style="border:none;padding:0;background:none;">
-          <h3>Tu Inversión</h3>
-          <div id="budgetDetails"></div>
+      <!-- INVERSIÓN TAB -->
+      <div id="tab-inversion" class="tab-content">
+        <div class="card">
+          <h3>💰 Tu Inversión Mensual</h3>
+          <div style="text-align:center;padding:24px;">
+            <div style="font-size:3rem;font-weight:700;color:#4f6ef7;">$299 USD</div>
+            <div style="color:#8b8fa3;font-size:0.85rem;margin-top:8px;">por mes</div>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="label">Servicio Vortis</div><div class="value">$99 / mes</div></div>
+            <div class="info-item"><div class="label">Inversión en Meta Ads</div><div class="value">$200 / mes</div></div>
+            <div class="info-item"><div class="label">Duración recomendada</div><div class="value">Continuo</div></div>
+            <div class="info-item"><div class="label">Plataformas</div><div class="value">Facebook + Instagram</div></div>
+          </div>
+          <p style="color:#8b8fa3;font-size:0.85rem;margin-top:14px;text-align:center;">
+            La inversión en Meta se transparenta cuando se activa tu campaña.
+          </p>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    let _clientId = null;
-    let _clientData = null;
+    let _token = null;
+    let _data = null;
 
     const params = new URLSearchParams(window.location.search);
-    const urlId = params.get('id');
-    if (urlId) { document.getElementById('clientIdInput').value = urlId; lookupCampaign(); }
+    const urlToken = params.get('token');
+    if (urlToken) {
+      document.getElementById('tokenInput').value = urlToken;
+      lookup();
+    }
 
-    async function lookupCampaign() {
-      _clientId = document.getElementById('clientIdInput').value.trim();
-      if (!_clientId) return;
+    async function lookup() {
+      _token = document.getElementById('tokenInput').value.trim();
+      if (!_token) return;
       document.getElementById('lookupError').innerHTML = '';
       try {
-        const res = await fetch('/api/clients/' + _clientId);
-        if (!res.ok) throw new Error();
-        _clientData = await res.json();
+        const res = await fetch('/api/public/me?token=' + encodeURIComponent(_token));
+        if (!res.ok) throw new Error((await res.json()).error || 'Error');
+        _data = await res.json();
         document.getElementById('lookupSection').style.display = 'none';
         document.getElementById('campaignView').style.display = 'block';
-        renderAll(_clientData);
-      } catch {
-        document.getElementById('lookupError').innerHTML = '<div class="error-msg">No se encontró una campaña con ese ID.</div>';
+        renderAll(_data);
+
+        // If URL hash is #aprobar, switch to approve tab
+        if (window.location.hash === '#aprobar') showTab('aprobar');
+      } catch (err) {
+        document.getElementById('lookupError').innerHTML =
+          '<div class="error-msg">No pudimos encontrar tu campaña. Verificá tu link.</div>';
       }
     }
 
-    function renderAll(data) {
-      const c = data.client;
-      const campaign = data.campaigns?.[0];
-      const ads = data.ads || [];
+    function renderAll(d) {
+      const c = d.client;
+      const camp = d.campaign;
+      const ads = d.ads || [];
+
+      document.getElementById('businessName').textContent = c.business_name;
+      document.getElementById('infoBiz').textContent = c.business_name;
+      document.getElementById('infoCity').textContent = c.city;
+      document.getElementById('infoObj').textContent = c.campaign_objective;
+      document.getElementById('infoAds').textContent = ads.length;
 
       // Status
-      document.getElementById('businessName').textContent = c.business_name;
-      const sm = {
-        onboarding: { icon: '📋', text: 'Registro recibido', badge: 'REGISTRADO', cls: 'generating' },
-        processing: { icon: '⚙️', text: 'Nuestra IA está generando tu campaña...', badge: 'PROCESANDO', cls: 'generating' },
-        campaign_ready: { icon: '✅', text: 'Tu campaña está lista para revisión', badge: 'LISTA', cls: 'ready' },
-        deployed: { icon: '🚀', text: 'Campaña desplegada en Meta Ads', badge: 'DESPLEGADA', cls: 'deployed' },
-        active: { icon: '📊', text: 'Tu campaña está activa y generando resultados', badge: 'ACTIVA', cls: 'active' },
+      const statusMap = {
+        onboarding: { icon: '📋', text: 'Registro recibido. Esperando completar onboarding.', badge: 'REGISTRADO', cls: 'gen' },
+        paid_pending_onboarding: { icon: '✓', text: 'Pago confirmado. Completá tu onboarding.', badge: 'PAGADO', cls: 'gen' },
+        processing: { icon: '⚙️', text: 'Nuestra IA está generando tu campaña...', badge: 'PROCESANDO', cls: 'gen' },
+        pending_admin_review: { icon: '👀', text: 'Tu campaña está siendo revisada por nuestro equipo.', badge: 'EN REVISIÓN', cls: 'gen' },
+        campaign_ready: { icon: '✅', text: 'Tu campaña está lista para que la revises.', badge: 'LISTA', cls: 'ready' },
+        approved_by_client: { icon: '🚀', text: 'Aprobaste los anuncios. Los publicamos pronto.', badge: 'APROBADA', cls: 'ready' },
+        deployed: { icon: '🚀', text: 'Tu campaña fue desplegada en Meta Ads.', badge: 'DESPLEGADA', cls: 'deploy' },
+        active: { icon: '📈', text: 'Tu campaña está activa y generando resultados.', badge: 'ACTIVA', cls: 'act' },
       };
-      const s = sm[c.status] || sm.onboarding;
+      const s = statusMap[c.status] || statusMap.onboarding;
       document.getElementById('statusIcon').textContent = s.icon;
       document.getElementById('statusIcon').className = 'status-icon ' + s.cls;
       document.getElementById('statusText').textContent = s.text;
       document.getElementById('statusBadge').textContent = s.badge;
       document.getElementById('statusBadge').className = 'status-badge ' + s.cls;
 
+      // Progress stepper
+      const steps = ['Pago', 'Onboarding', 'IA', 'Revisión', 'Aprobación', 'Activa'];
+      const stepIndex = {
+        paid_pending_onboarding: 1, onboarding: 1, processing: 2,
+        pending_admin_review: 3, campaign_ready: 4,
+        approved_by_client: 5, deployed: 5, active: 5,
+      }[c.status] ?? 0;
+      document.getElementById('progressStepper').innerHTML = steps.map((s, i) => {
+        const cls = i < stepIndex ? 'done' : i === stepIndex ? 'active' : '';
+        return `<div class="step-item ${cls}">${i < stepIndex ? '✓ ' : ''}${s}</div>`;
+      }).join('');
+
       // Metrics
-      let ti = 0, tc = 0, tm = 0, ts = 0;
-      ads.forEach(a => { ti += a.impressions||0; tc += a.clicks||0; tm += a.messages||0; ts += a.spend_usd||0; });
-      document.getElementById('metricImpressions').textContent = ti.toLocaleString();
-      document.getElementById('metricClicks').textContent = tc.toLocaleString();
-      document.getElementById('metricMessages').textContent = tm.toLocaleString();
-      document.getElementById('metricSpend').textContent = '$' + ts.toFixed(2);
+      const m = d.metrics || { impressions: 0, clicks: 0, messages: 0 };
+      document.getElementById('mImp').textContent = m.impressions.toLocaleString();
+      document.getElementById('mClicks').textContent = m.clicks.toLocaleString();
+      document.getElementById('mMsg').textContent = m.messages.toLocaleString();
 
-      const ctr = ti > 0 ? ((tc/ti)*100).toFixed(2) + '% CTR' : 'Sin datos aún';
-      const cpm = ti > 0 ? 'CPM $' + ((ts/ti)*1000).toFixed(2) : '';
-      const cpmsg = tm > 0 ? '$' + (ts/tm).toFixed(2) + '/msg' : 'Sin datos aún';
-      const left = 200 - ts;
-      document.getElementById('metricCTR').textContent = ctr;
-      document.getElementById('metricCPM').textContent = cpm;
-      document.getElementById('metricCostPerMsg').textContent = cpmsg;
-      document.getElementById('metricBudgetLeft').textContent = left > 0 ? '$' + left.toFixed(0) + ' restante' : '';
-
-      // Ads
-      document.getElementById('adsCount').textContent = ads.length;
-      const variants = { beneficio_directo: 'Beneficio Directo', problema_dolor: 'Problema / Dolor', urgencia: 'Urgencia', prueba_social: 'Prueba Social', emocional: 'Emocional' };
-      document.getElementById('adsContainer').innerHTML = ads.length > 0
-        ? ads.map((a, i) => `
-          <div class="ad-preview">
-            <div class="ad-label">Variante ${i+1}</div>
-            <div class="ad-head">${a.headline}</div>
-            <div class="ad-desc">${a.description}</div>
-            <div class="ad-footer">
-              <span class="ad-cta">${a.cta_text}</span>
-              <span class="ad-status ${a.validation_status}">${a.validation_status === 'approved' ? '✓ Aprobado' : '✗ Rechazado'}</span>
-            </div>
-          </div>`).join('')
-        : '<p style="color:#8b8fa3;">Los anuncios se están generando...</p>';
-
-      // Targeting
-      if (campaign?.targeting_config) {
-        let tgt; try { tgt = JSON.parse(campaign.targeting_config); } catch { tgt = {}; }
-        const age = tgt.age_range || {};
-        const cities = tgt.geo_locations?.cities || [];
-        const interests = tgt.interests || [];
-        const placements = tgt.placements || [];
-        document.getElementById('targetingGrid').innerHTML = `
-          <div class="info-item"><div class="info-label">📍 Ubicación</div><div class="info-value">${cities.map(c => c.name || c.city || 'Tu ciudad').join(', ')} (${cities[0]?.radius || 25} km)</div></div>
-          <div class="info-item"><div class="info-label">👤 Edad</div><div class="info-value">${age.min || 25} - ${age.max || 55} años</div></div>
-          <div class="info-item"><div class="info-label">⚧ Género</div><div class="info-value">${tgt.genders === 'todos' || !tgt.genders ? 'Todos' : tgt.genders}</div></div>
-          <div class="info-item"><div class="info-label">🌐 Idioma</div><div class="info-value">${(tgt.locales || ['Español']).join(', ')}</div></div>
-          <div class="info-item"><div class="info-label">❤️ Intereses</div><div class="info-value">${Array.isArray(interests) ? interests.map(i => typeof i === 'string' ? i : i.name).join(', ') : 'Definidos por IA'}</div></div>
-          <div class="info-item"><div class="info-label">📱 Plataformas</div><div class="info-value">${placements.map(p => p.replace('_', ' ').replace(/(^\w)/g, m => m.toUpperCase())).join(', ') || 'Facebook, Instagram'}</div></div>
-        `;
+      // Approval needed?
+      const needsApproval = c.status === 'campaign_ready' && d.summary.pending_approval > 0;
+      document.getElementById('approvalCta').style.display = needsApproval ? 'block' : 'none';
+      if (needsApproval) {
+        document.getElementById('tabBtnAprobar').classList.add('has-action');
       }
 
-      // Budget
-      if (campaign?.budget_config) {
-        let b; try { b = JSON.parse(campaign.budget_config); } catch { b = {}; }
-        const est = b.estimated_results || {};
-        document.getElementById('budgetDetails').innerHTML = `
-          <div style="margin-bottom:24px;">
-            <p style="color:#8b8fa3;font-size:0.85rem;margin-bottom:12px;">Tu inversión mensual de $299 USD:</p>
-            <div class="budget-bar">
-              <div class="budget-fill fee" style="width:33%;">$99 servicio</div>
-            </div>
-            <div class="budget-bar">
-              <div class="budget-fill ads" style="width:67%;">$200 publicidad</div>
-            </div>
-          </div>
-          <div class="info-grid">
-            <div class="info-item"><div class="info-label">💵 Presupuesto Diario</div><div class="info-value">$${b.daily_budget_usd || 6.67} USD</div></div>
-            <div class="info-item"><div class="info-label">📅 Duración</div><div class="info-value">${b.recommended_duration_days || 30} días</div></div>
-            <div class="info-item"><div class="info-label">👁 Impresiones Est.</div><div class="info-value">${est.impressions ? est.impressions.min?.toLocaleString() + ' - ' + est.impressions.max?.toLocaleString() : '—'}</div></div>
-            <div class="info-item"><div class="info-label">👆 Clicks Est.</div><div class="info-value">${est.clicks ? est.clicks.min?.toLocaleString() + ' - ' + est.clicks.max?.toLocaleString() : '—'}</div></div>
-            <div class="info-item"><div class="info-label">💬 Mensajes Est.</div><div class="info-value">${est.messages ? est.messages.min?.toLocaleString() + ' - ' + est.messages.max?.toLocaleString() : '—'}</div></div>
-            <div class="info-item"><div class="info-label">📈 CPM Estimado</div><div class="info-value">$${b.benchmarks?.estimated_cpm || '—'} USD</div></div>
-          </div>
-        `;
+      // Ads in approve tab
+      document.getElementById('approvalCount').textContent =
+        d.summary.approved_by_client + '/' + d.summary.total_ads;
+
+      document.getElementById('adsContainer').innerHTML = ads.length === 0
+        ? '<p style="color:#8b8fa3;">Tus anuncios todavía no fueron generados.</p>'
+        : ads.map((ad, i) => {
+          const done = ad.client_approved !== 0;
+          const approved = ad.client_approved === 1;
+          const rejected = ad.client_approved === -1;
+          return `
+            <div class="ad-row ${done ? 'done' : ''}">
+              <div class="ad-num">Anuncio ${i+1}</div>
+              <div class="ad-head">${ad.headline}</div>
+              <div class="ad-desc">${ad.description}</div>
+              <div class="ad-cta-preview">${ad.cta_text}</div>
+              ${done ? `
+                <span class="ad-status ${approved ? 'approved' : 'rejected'}">${approved ? '✓ Aprobado' : '✗ Rechazado'}</span>
+                ${ad.client_feedback ? '<p style="color:#8b8fa3;font-size:0.8rem;margin-top:8px;">Tu comentario: ' + ad.client_feedback + '</p>' : ''}
+              ` : `
+                <div class="ad-actions">
+                  <button class="btn btn-approve" onclick="approveAd('${ad.id}')">✓ Aprobar</button>
+                  <button class="btn btn-reject" onclick="showReject('${ad.id}')">✗ Cambiar algo</button>
+                  <input type="text" class="feedback-input" id="fb-${ad.id}" placeholder="¿Qué cambiarías?">
+                  <button class="btn btn-reject" id="confirm-${ad.id}" style="display:none;" onclick="rejectAd('${ad.id}')">Enviar feedback</button>
+                </div>
+              `}
+            </div>`;
+        }).join('');
+
+      if (d.summary.pending_approval === 0) {
+        document.getElementById('approveAllSection').style.display = 'none';
       }
+
+      // Next steps
+      const next = {
+        paid_pending_onboarding: '<strong>1.</strong> Completá tu <a href="/" style="color:#4f6ef7;">onboarding</a> (5-10 min)<br><strong>2.</strong> Nuestra IA genera tu campaña<br><strong>3.</strong> Te avisamos cuando esté lista para revisar',
+        processing: '<strong>1.</strong> ⚙️ La IA está trabajando (toma 1-2 min)<br><strong>2.</strong> Nuestro equipo revisa<br><strong>3.</strong> Recibís el email cuando esté lista',
+        pending_admin_review: '<strong>1.</strong> ✅ La IA terminó<br><strong>2.</strong> 👀 Nuestro equipo está revisando (24-48hs)<br><strong>3.</strong> Te avisamos por email cuando esté lista',
+        campaign_ready: '<strong>1.</strong> ✅ Tu campaña fue revisada<br><strong>2.</strong> 📋 Aprobá los anuncios en la pestaña "Aprobar Anuncios"<br><strong>3.</strong> Publicamos en Meta Ads',
+        approved_by_client: '<strong>1.</strong> ✅ Aprobaste los anuncios<br><strong>2.</strong> 🚀 Estamos publicando en Meta<br><strong>3.</strong> En 24hs ves los primeros resultados',
+        active: '<strong>1.</strong> 📈 Tu campaña está corriendo<br><strong>2.</strong> Revisá tus métricas semanalmente<br><strong>3.</strong> Respondé los mensajes de WhatsApp rápido',
+      }[c.status] || 'Te vamos a avisar por email a medida que avancemos.';
+      document.getElementById('nextSteps').innerHTML = next;
     }
 
-    // Tabs
     function showTab(name) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.getElementById('tabBtn' + name.charAt(0).toUpperCase() + name.slice(1))?.classList.add('active');
       document.getElementById('tab-' + name).classList.add('active');
-      event.target.classList.add('active');
     }
 
-    // Chat
-    function askQuestion(q) {
-      document.getElementById('chatInput').value = q;
-      sendChat();
+    async function approveAd(id) {
+      const res = await fetch('/api/public/approve?token=' + encodeURIComponent(_token), {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({adId: id})
+      });
+      if ((await res.json()).success) lookup();
     }
+
+    function showReject(id) {
+      document.getElementById('fb-' + id).classList.add('show');
+      document.getElementById('confirm-' + id).style.display = 'inline-block';
+    }
+
+    async function rejectAd(id) {
+      const fb = document.getElementById('fb-' + id).value.trim();
+      if (!fb) { alert('Escribí tu comentario para rechazar'); return; }
+      const res = await fetch('/api/public/reject?token=' + encodeURIComponent(_token), {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({adId: id, feedback: fb})
+      });
+      if ((await res.json()).success) lookup();
+    }
+
+    async function approveAll() {
+      if (!confirm('¿Aprobar TODOS los anuncios pendientes?')) return;
+      const res = await fetch('/api/public/approve-all?token=' + encodeURIComponent(_token), {method:'POST'});
+      if ((await res.json()).success) lookup();
+    }
+
+    function askQ(q) { document.getElementById('chatIn').value = q; sendChat(); }
 
     async function sendChat() {
-      const input = document.getElementById('chatInput');
+      const input = document.getElementById('chatIn');
       const q = input.value.trim();
-      if (!q || !_clientId) return;
-
+      if (!q) return;
       input.value = '';
-      addChatMsg(q, 'user');
-      document.getElementById('chatSendBtn').disabled = true;
-
-      const typing = document.createElement('div');
-      typing.className = 'typing-indicator';
-      typing.style.display = 'flex';
-      typing.innerHTML = '<span></span><span></span><span></span>';
-      document.getElementById('chatMessages').appendChild(typing);
-      scrollChat();
-
+      addMsg(q, 'user');
       try {
-        const res = await fetch('/api/consultant/' + _clientId, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question: q }),
+        const res = await fetch('/api/public/consultant?token=' + encodeURIComponent(_token), {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({question: q})
         });
         const data = await res.json();
-        typing.remove();
-
         if (data.success) {
-          let html = data.answer.replace(/\n/g, '<br>');
+          let text = data.answer;
           if (data.recommendations?.length) {
-            html += '<div class="chat-recs">';
-            data.recommendations.forEach(r => { html += '<div class="chat-rec">' + r + '</div>'; });
-            html += '</div>';
+            text += '\n\n💡 ' + data.recommendations.join('\n💡 ');
           }
-          addChatMsg(html, 'bot', true);
+          addMsg(text, 'bot');
         } else {
-          addChatMsg('Disculpá, hubo un error. Intentá de nuevo.', 'bot');
+          addMsg('Hubo un error. Intentá de nuevo.', 'bot');
         }
-      } catch {
-        typing.remove();
-        addChatMsg('Error de conexión. Intentá de nuevo.', 'bot');
-      }
-      document.getElementById('chatSendBtn').disabled = false;
+      } catch { addMsg('Error de conexión.', 'bot'); }
     }
 
-    function addChatMsg(text, type, isHtml) {
+    function addMsg(text, type) {
       const div = document.createElement('div');
       div.className = 'chat-msg ' + type;
-      const time = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-      if (isHtml) {
-        div.innerHTML = text + '<div class="msg-time">' + time + '</div>';
-      } else {
-        div.textContent = text;
-        const t = document.createElement('div');
-        t.className = 'msg-time';
-        t.textContent = time;
-        div.appendChild(t);
-      }
-      document.getElementById('chatMessages').appendChild(div);
-      scrollChat();
-    }
-
-    function scrollChat() {
-      const c = document.getElementById('chatMessages');
+      div.textContent = text;
+      document.getElementById('chatMsgs').appendChild(div);
+      const c = document.getElementById('chatMsgs');
       c.scrollTop = c.scrollHeight;
     }
+
+    // Auto-refresh every 20s
+    setInterval(() => { if (_token && _data) lookup(); }, 20000);
   </script>
 </body>
 </html>

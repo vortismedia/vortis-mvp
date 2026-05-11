@@ -617,10 +617,21 @@
 
             <div class="detail-section">
               <h4>Acciones</h4>
+              ${c.status === 'pending_admin_review' ? `
+                <div style="background:#2d2a0d;border:1px solid #facc15;border-radius:10px;padding:14px;margin-bottom:12px;">
+                  <p style="color:#facc15;font-weight:600;margin-bottom:8px;">⏳ IA terminó. Listo para tu revisión.</p>
+                  <p style="color:#b0b4cc;font-size:0.8rem;margin-bottom:12px;">Revisá los anuncios y la data IA abajo. Si está bien, hacé click acá para mandarle al cliente.</p>
+                  <button class="btn btn-success" onclick="adminApprove('${clientId}')">✓ Aprobar y notificar al cliente</button>
+                </div>
+              ` : c.admin_reviewed === 1 ? `
+                <div style="background:#0d3320;border:1px solid #4ade80;border-radius:10px;padding:10px;margin-bottom:12px;">
+                  <p style="color:#4ade80;font-size:0.85rem;">✓ Aprobada y notificada al cliente</p>
+                </div>
+              ` : ''}
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <a class="btn btn-secondary btn-sm" href="/mi-campana?id=${clientId}" target="_blank">Ver como cliente →</a>
-                <a class="btn btn-secondary btn-sm" href="/aprobar?id=${clientId}" target="_blank">Página de aprobación →</a>
+                <a class="btn btn-secondary btn-sm" href="/mi-campana?token=${c.access_token || ''}" target="_blank">Ver como cliente →</a>
                 <a class="btn btn-secondary btn-sm" href="/plantillas#${clientId}" target="_blank" onclick="localStorage.setItem('selectedClient', '${clientId}')">Ver plantillas →</a>
+                <button class="btn btn-secondary btn-sm" onclick="copyClientLink('${c.access_token || ''}')">Copiar link cliente</button>
               </div>
             </div>
           </div>
@@ -703,6 +714,27 @@
       } catch (err) {
         detail.innerHTML = '<div style="color:#ff6b6b;">Error cargando cliente: ' + err.message + '</div>';
       }
+    }
+
+    async function adminApprove(clientId) {
+      if (!confirm('¿Aprobar la campaña y mandarle email al cliente con el link?')) return;
+      try {
+        const res = await fetch('/api/clients/' + clientId + '/admin-approve', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('Aprobada. Email enviado al cliente.', 'success');
+          if (_selectedClientId) selectClient(_selectedClientId);
+        } else {
+          showToast('Error: ' + (data.error || 'desconocido'), 'error');
+        }
+      } catch { showToast('Error de conexión', 'error'); }
+    }
+
+    function copyClientLink(token) {
+      if (!token) { showToast('Cliente sin token (cliente viejo)', 'error'); return; }
+      const url = window.location.origin + '/mi-campana?token=' + token;
+      navigator.clipboard.writeText(url);
+      showToast('Link copiado al portapapeles', 'success');
     }
 
     async function metaAction(campaignId, action) {

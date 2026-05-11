@@ -1,7 +1,13 @@
+// Postgres-compatible schema. Key changes from SQLite version:
+// - TEXT DEFAULT (datetime('now')) -> TIMESTAMP DEFAULT NOW()
+// - REAL -> DOUBLE PRECISION
+// - Added `access_token` to clients for secure URL-based access
+// - Added `admin_reviewed` flag for the Vortis review step before notifying client
 export const SCHEMA = `
--- Clients table: businesses that use Vortis
+-- Clients
 CREATE TABLE IF NOT EXISTS clients (
   id TEXT PRIMARY KEY,
+  access_token TEXT UNIQUE,
   business_name TEXT NOT NULL,
   industry TEXT NOT NULL,
   city TEXT NOT NULL,
@@ -11,7 +17,7 @@ CREATE TABLE IF NOT EXISTS clients (
   price_range TEXT,
   campaign_objective TEXT NOT NULL,
   destination_url TEXT,
-  daily_budget_usd REAL DEFAULT 6.67,
+  daily_budget_usd DOUBLE PRECISION DEFAULT 6.67,
   brand_tone TEXT DEFAULT 'profesional',
   prohibited_words TEXT,
   mandatory_words TEXT,
@@ -19,11 +25,9 @@ CREATE TABLE IF NOT EXISTS clients (
   contact_phone TEXT,
   contact_name TEXT NOT NULL,
 
-  -- Meta Ads config (for Modelo B: Vortis manages)
   meta_ad_account_id TEXT,
   meta_page_id TEXT,
 
-  -- Creative assets (for designer templates)
   logo_url TEXT,
   brand_colors TEXT,
   brand_fonts TEXT,
@@ -32,78 +36,77 @@ CREATE TABLE IF NOT EXISTS clients (
   visual_style TEXT DEFAULT 'moderno',
   creative_notes TEXT,
 
-  -- Payment
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   payment_status TEXT DEFAULT 'pending',
-  plan_price_usd REAL DEFAULT 299,
+  plan_price_usd DOUBLE PRECISION DEFAULT 299,
 
-  -- Status
   status TEXT DEFAULT 'onboarding',
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
+  admin_reviewed INTEGER DEFAULT 0,
+  admin_reviewed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Campaigns table
+CREATE INDEX IF NOT EXISTS idx_clients_token ON clients(access_token);
+CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);
+
+-- Campaigns
 CREATE TABLE IF NOT EXISTS campaigns (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES clients(id),
 
-  -- Meta Ads IDs
   meta_campaign_id TEXT,
   meta_adset_id TEXT,
 
-  -- AI-generated content
   business_analysis TEXT,
   targeting_config TEXT,
   budget_config TEXT,
 
-  -- Status
   status TEXT DEFAULT 'generating',
   meta_status TEXT DEFAULT 'PAUSED',
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- Ads table (multiple ads per campaign)
+CREATE INDEX IF NOT EXISTS idx_campaigns_client ON campaigns(client_id);
+
+-- Ads
 CREATE TABLE IF NOT EXISTS ads (
   id TEXT PRIMARY KEY,
   campaign_id TEXT NOT NULL REFERENCES campaigns(id),
   client_id TEXT NOT NULL REFERENCES clients(id),
 
-  -- Meta Ads
   meta_ad_id TEXT,
 
-  -- AI-generated copy
   headline TEXT NOT NULL,
   description TEXT NOT NULL,
   cta_text TEXT DEFAULT 'Enviar mensaje',
   cta_type TEXT DEFAULT 'SEND_MESSAGE',
 
-  -- Validation
   validation_status TEXT DEFAULT 'pending',
   validation_notes TEXT,
 
-  -- Client approval
   client_approved INTEGER DEFAULT 0,
   client_feedback TEXT,
-  approved_at TEXT,
+  approved_at TIMESTAMP,
 
-  -- Creative (template + format)
   template_id TEXT,
   format TEXT DEFAULT 'feed',
   creative_url TEXT,
 
-  -- Performance (updated from Meta Insights)
   impressions INTEGER DEFAULT 0,
   clicks INTEGER DEFAULT 0,
   messages INTEGER DEFAULT 0,
-  spend_usd REAL DEFAULT 0,
+  spend_usd DOUBLE PRECISION DEFAULT 0,
 
-  created_at TEXT DEFAULT (datetime('now'))
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Agent logs: track what each AI agent did
+CREATE INDEX IF NOT EXISTS idx_ads_campaign ON ads(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_ads_client ON ads(client_id);
+
+-- Agent logs
 CREATE TABLE IF NOT EXISTS agent_logs (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES clients(id),
@@ -115,10 +118,10 @@ CREATE TABLE IF NOT EXISTS agent_logs (
   duration_ms INTEGER DEFAULT 0,
   status TEXT DEFAULT 'success',
   error_message TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Performance snapshots (daily metrics for analytics)
+-- Performance snapshots (daily metrics)
 CREATE TABLE IF NOT EXISTS performance_snapshots (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES clients(id),
@@ -127,11 +130,11 @@ CREATE TABLE IF NOT EXISTS performance_snapshots (
   impressions INTEGER DEFAULT 0,
   clicks INTEGER DEFAULT 0,
   messages INTEGER DEFAULT 0,
-  spend_usd REAL DEFAULT 0,
-  cpm REAL DEFAULT 0,
-  cpc REAL DEFAULT 0,
-  ctr REAL DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now'))
+  spend_usd DOUBLE PRECISION DEFAULT 0,
+  cpm DOUBLE PRECISION DEFAULT 0,
+  cpc DOUBLE PRECISION DEFAULT 0,
+  ctr DOUBLE PRECISION DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Creative templates
@@ -144,10 +147,10 @@ CREATE TABLE IF NOT EXISTS creative_templates (
   description TEXT,
   thumbnail_url TEXT,
   template_url TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Creative briefs (auto-generated for designer)
+-- Creative briefs
 CREATE TABLE IF NOT EXISTS creative_briefs (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES clients(id),
@@ -169,18 +172,18 @@ CREATE TABLE IF NOT EXISTS creative_briefs (
   required_assets TEXT,
   designer_notes TEXT,
   output_url TEXT,
-  completed_at TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Client assets (images uploaded by client)
+-- Client assets (Cloudinary URLs)
 CREATE TABLE IF NOT EXISTS client_assets (
   id TEXT PRIMARY KEY,
   client_id TEXT NOT NULL REFERENCES clients(id),
   asset_type TEXT NOT NULL,
   label TEXT,
   url TEXT NOT NULL,
-  uploaded_at TEXT DEFAULT (datetime('now'))
+  uploaded_at TIMESTAMP DEFAULT NOW()
 );
 
 -- RAG knowledge base
@@ -190,6 +193,6 @@ CREATE TABLE IF NOT EXISTS knowledge_base (
   industry TEXT,
   content TEXT NOT NULL,
   metadata TEXT,
-  created_at TEXT DEFAULT (datetime('now'))
+  created_at TIMESTAMP DEFAULT NOW()
 );
 `;

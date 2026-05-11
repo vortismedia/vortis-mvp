@@ -14,16 +14,16 @@ export interface ConsultantResponse {
 export async function consultAgent(input: ConsultantInput): Promise<ConsultantResponse> {
   const db = getDb();
 
-  const client = db.prepare('SELECT * FROM clients WHERE id = ?').get(input.clientId) as any;
+  const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get<any>(input.clientId);
   if (!client) throw new Error('Cliente no encontrado');
 
-  const campaign = db.prepare(
+  const campaign = await db.prepare(
     'SELECT * FROM campaigns WHERE client_id = ? ORDER BY created_at DESC LIMIT 1'
-  ).get(input.clientId) as any;
+  ).get<any>(input.clientId);
 
-  const ads = db.prepare(
+  const ads = await db.prepare(
     'SELECT * FROM ads WHERE client_id = ? ORDER BY created_at DESC'
-  ).all(input.clientId) as any[];
+  ).all<any>(input.clientId);
 
   let budget: any = {};
   let targeting: any = {};
