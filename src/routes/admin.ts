@@ -12,6 +12,7 @@ router.delete('/wipe-all-clients', async (_req: Request, res: Response) => {
   try {
     // Order matters due to foreign keys
     await db.prepare('DELETE FROM ads').run();
+    await db.prepare('DELETE FROM ad_sets').run();
     await db.prepare('DELETE FROM agent_logs').run();
     await db.prepare('DELETE FROM performance_snapshots').run();
     await db.prepare('DELETE FROM creative_briefs').run();
@@ -30,6 +31,7 @@ router.delete('/clients/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     await db.prepare('DELETE FROM ads WHERE client_id = ?').run(id);
+    await db.prepare('DELETE FROM ad_sets WHERE client_id = ?').run(id);
     await db.prepare('DELETE FROM agent_logs WHERE client_id = ?').run(id);
     await db.prepare('DELETE FROM performance_snapshots WHERE client_id = ?').run(id);
     await db.prepare('DELETE FROM creative_briefs WHERE client_id = ?').run(id);
