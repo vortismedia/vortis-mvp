@@ -227,12 +227,18 @@
         <div class="card" style="padding:0;overflow:hidden;">
           <div class="chat-container">
             <div class="chat-msgs" id="chatMsgs">
-              <div class="chat-msg bot">¡Hola! Soy tu consultor de Vortis. Preguntame lo que quieras sobre tu campaña.</div>
+              <div class="chat-msg bot">¡Hola! Soy tu consultor de Vortis. Preguntame lo que quieras sobre tu campaña: presupuesto, métricas, mejoras, horarios, audiencia, lo que sea.</div>
             </div>
             <div class="chat-suggestions">
-              <span class="chat-suggestion" onclick="askQ('¿Cómo van mis resultados?')">📊 Resultados</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cuál es el mejor horario?')">🕐 Mejor horario</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cómo están mis anuncios?')">📝 Mis anuncios</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo van mis resultados?')">📊 Mis resultados</span>
+              <span class="chat-suggestion" onclick="askQ('¿Qué pasa si aumento el presupuesto 30%?')">💰 Subir presupuesto</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cuál es el mejor horario para mostrar mis anuncios?')">🕐 Mejor horario</span>
+              <span class="chat-suggestion" onclick="askQ('¿A quién le estamos mostrando los anuncios?')">🎯 Mi audiencia</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo están funcionando mis anuncios?')">📝 Performance de ads</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo puedo mejorar mis resultados?')">💡 Cómo mejorar</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cuánto voy a recibir de mensajes este mes?')">💬 Estimación mensajes</span>
+              <span class="chat-suggestion" onclick="askQ('¿Puedo pausar la campaña?')">⏸ Pausar</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo funciona el cobro mensual?')">💳 Mi facturación</span>
             </div>
             <div class="chat-input">
               <input type="text" id="chatIn" placeholder="Escribí tu pregunta..." onkeypress="if(event.key==='Enter')sendChat()">
