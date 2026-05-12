@@ -80,5 +80,7 @@ Genera la recomendación de presupuesto.`;
     userMessage,
     clientId: params.clientId,
     campaignId: params.campaignId,
+    tier: 'haiku', // Formula-based math + recommendations
+    maxTokens: 2048,
   });
 }

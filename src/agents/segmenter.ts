@@ -116,5 +116,7 @@ Generá las 3 configuraciones TOFU/MOFU/BOFU en formato JSON estricto.`;
     userMessage,
     clientId: params.clientId,
     campaignId: params.campaignId,
+    tier: 'sonnet', // Strategic audience design needs Sonnet
+    maxTokens: 4096,
   });
 }

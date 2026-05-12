@@ -81,5 +81,7 @@ ${knowledge}`;
     systemPrompt: SYSTEM_PROMPT,
     userMessage,
     clientId: clientData.id,
+    tier: 'sonnet', // Business analysis needs strategic reasoning
+    maxTokens: 2048,
   });
 }

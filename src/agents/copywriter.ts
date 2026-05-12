@@ -139,5 +139,7 @@ IMPORTANTE: 5 ads TOFU, 5 ads MOFU, 5 ads BOFU. Total 15. Diferentes ángulos ps
     userMessage,
     clientId: params.clientId,
     campaignId: params.campaignId,
+    tier: 'sonnet', // Creative content needs Sonnet's quality
+    maxTokens: 8192, // 15 ads requires more output tokens
   });
 }

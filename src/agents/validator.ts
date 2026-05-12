@@ -79,5 +79,7 @@ Valida cada anuncio y corrige los que necesiten ajustes.`;
     userMessage,
     clientId: params.clientId,
     campaignId: params.campaignId,
+    tier: 'haiku', // Simple yes/no policy check
+    maxTokens: 4096, // Needs space for 15 validations
   });
 }
