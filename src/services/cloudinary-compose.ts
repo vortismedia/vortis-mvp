@@ -58,65 +58,19 @@ export interface AdCreativeInput {
  * Returns a URL that, when fetched, produces a real JPG/PNG image with all layers applied.
  */
 export function composeAdCreative(input: AdCreativeInput): string {
+  // If client has a photo, use it cropped (no text overlay — Meta 20% rule).
+  // If not, fall back to clean branded card (solid color, no text).
   const dims = input.format === 'story'
     ? { w: 1080, h: 1920 }
-    : input.format === 'square'
-    ? { w: 1080, h: 1080 }
     : { w: 1080, h: 1080 };
 
-  const colors = pickBackgroundColor(input.brandColors || '');
+  if (!input.photoUrl) return composeBrandedCard(input);
 
-  // Base: solid color background (we use a Cloudinary trick — text on solid color)
-  // Use a generated background via the "background" parameter
-  const transforms: string[] = [];
+  const photoId = extractPublicId(input.photoUrl);
+  if (!photoId) return composeBrandedCard(input);
 
-  // 1. Base canvas (solid brand color)
-  transforms.push(`c_pad,w_${dims.w},h_${dims.h},b_rgb:${colors.hex}`);
-
-  // 2. Photo overlay (if client uploaded a photo)
-  if (input.photoUrl) {
-    const photoId = extractPublicId(input.photoUrl);
-    if (photoId) {
-      // Photo in the center, ~60% of canvas, with overlay tint
-      const photoW = Math.round(dims.w * 0.9);
-      const photoH = Math.round(dims.h * 0.55);
-      transforms.push(`l_${photoId},w_${photoW},h_${photoH},c_fill,g_north,y_${Math.round(dims.h * 0.05)},r_20`);
-    }
-  }
-
-  // 3. Logo overlay (top-left corner, if uploaded)
-  if (input.logoUrl) {
-    const logoId = extractPublicId(input.logoUrl);
-    if (logoId) {
-      const logoSize = Math.round(dims.w * 0.12);
-      transforms.push(`l_${logoId},w_${logoSize},c_fit,g_north_west,x_40,y_40,r_max,b_rgb:ffffff`);
-    }
-  }
-
-  // 4. Headline text overlay (bottom area, brand color text on white panel)
-  const headlineText = cloudinaryEncodeText(input.headline.substring(0, 60));
-  const headlineFontSize = input.format === 'story' ? 70 : 56;
-  transforms.push(
-    `l_text:Arial_${headlineFontSize}_bold:${headlineText},co_rgb:${colors.textColor},c_fit,w_${Math.round(dims.w * 0.85)},g_south,y_${Math.round(dims.h * 0.18)}`
-  );
-
-  // 5. Business name (small, below headline)
-  const bizText = cloudinaryEncodeText(input.businessName.substring(0, 40));
-  transforms.push(
-    `l_text:Arial_28:${bizText},co_rgb:${colors.textColor},c_fit,w_${Math.round(dims.w * 0.85)},g_south,y_${Math.round(dims.h * 0.12)}`
-  );
-
-  // 6. CTA badge (bottom)
-  const ctaText = cloudinaryEncodeText(input.ctaText.substring(0, 25));
-  transforms.push(
-    `l_text:Arial_36_bold:${ctaText},co_rgb:${colors.hex},b_rgb:ffffff,c_fit,w_${Math.round(dims.w * 0.5)},h_60,g_south,y_${Math.round(dims.h * 0.04)},bo_2px_solid_rgb:${colors.hex},r_30`
-  );
-
-  // Compose final URL
-  // We need a base "blank canvas" - use Cloudinary's "blank" trick via colored background
-  // Trick: use a solid color image as base. Cloudinary's "sample.jpg" is a fallback.
-  const transformString = transforms.join('/');
-  return `${CLOUDINARY_BASE}/${transformString}/v1/sample.jpg`;
+  // Just crop the client photo to ad dimensions. No text overlays.
+  return `${CLOUDINARY_BASE}/c_fill,w_${dims.w},h_${dims.h},g_auto/${photoId}.jpg`;
 }
 
 /**
@@ -124,25 +78,11 @@ export function composeAdCreative(input: AdCreativeInput): string {
  * Useful as fallback when client doesn't have images yet.
  */
 export function composeBrandedCard(input: AdCreativeInput): string {
+  // Clean solid-color image, NO text overlay (Meta's 20% text policy compliance).
+  // Meta will render headline/body/CTA from the ad data itself.
   const dims = input.format === 'story' ? { w: 1080, h: 1920 } : { w: 1080, h: 1080 };
   const colors = pickBackgroundColor(input.brandColors || '');
-
-  const headline = cloudinaryEncodeText(input.headline.substring(0, 60));
-  const biz = cloudinaryEncodeText(input.businessName.substring(0, 40));
-  const cta = cloudinaryEncodeText(input.ctaText.substring(0, 25));
-
-  const transforms = [
-    // Solid color canvas
-    `c_pad,w_${dims.w},h_${dims.h},b_rgb:${colors.hex}`,
-    // Business name (top)
-    `l_text:Arial_40_bold:${biz},co_rgb:${colors.textColor},c_fit,w_${Math.round(dims.w * 0.8)},g_north,y_${Math.round(dims.h * 0.15)}`,
-    // Headline (center, big)
-    `l_text:Arial_72_bold:${headline},co_rgb:${colors.textColor},c_fit,w_${Math.round(dims.w * 0.85)},g_center`,
-    // CTA badge (bottom)
-    `l_text:Arial_44_bold:${cta},co_rgb:${colors.hex},b_rgb:ffffff,c_fit,w_${Math.round(dims.w * 0.5)},h_80,g_south,y_${Math.round(dims.h * 0.1)},r_40`,
-  ];
-
-  return `${CLOUDINARY_BASE}/${transforms.join('/')}/v1/sample.jpg`;
+  return `${CLOUDINARY_BASE}/c_pad,w_${dims.w},h_${dims.h},b_rgb:${colors.hex}/v1/sample.jpg`;
 }
 
 /**
