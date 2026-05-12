@@ -379,31 +379,59 @@
       document.getElementById('approvalCount').textContent =
         d.summary.approved_by_client + '/' + d.summary.total_ads;
 
-      document.getElementById('adsContainer').innerHTML = ads.length === 0
-        ? '<p style="color:#8b8fa3;">Tus anuncios todavía no fueron generados.</p>'
-        : ads.map((ad, i) => {
-          const done = ad.client_approved !== 0;
-          const approved = ad.client_approved === 1;
-          const rejected = ad.client_approved === -1;
-          return `
-            <div class="ad-row ${done ? 'done' : ''}">
-              <div class="ad-num">Anuncio ${i+1}</div>
-              <div class="ad-head">${ad.headline}</div>
-              <div class="ad-desc">${ad.description}</div>
-              <div class="ad-cta-preview">${ad.cta_text}</div>
-              ${done ? `
-                <span class="ad-status ${approved ? 'approved' : 'rejected'}">${approved ? '✓ Aprobado' : '✗ Rechazado'}</span>
-                ${ad.client_feedback ? '<p style="color:#8b8fa3;font-size:0.8rem;margin-top:8px;">Tu comentario: ' + ad.client_feedback + '</p>' : ''}
-              ` : `
-                <div class="ad-actions">
-                  <button class="btn btn-approve" onclick="approveAd('${ad.id}')">✓ Aprobar</button>
-                  <button class="btn btn-reject" onclick="showReject('${ad.id}')">✗ Cambiar algo</button>
-                  <input type="text" class="feedback-input" id="fb-${ad.id}" placeholder="¿Qué cambiarías?">
-                  <button class="btn btn-reject" id="confirm-${ad.id}" style="display:none;" onclick="rejectAd('${ad.id}')">Enviar feedback</button>
-                </div>
-              `}
-            </div>`;
-        }).join('');
+      // Group ads by funnel stage
+      const stageInfo = {
+        TOFU: { label: '🎯 Awareness (audiencia fría)', desc: 'Anuncios para que conozcan tu negocio por primera vez' },
+        MOFU: { label: '🤔 Consideración (audiencia tibia)', desc: 'Anuncios para quienes ya conocen y comparan' },
+        BOFU: { label: '🔥 Conversión (audiencia caliente)', desc: 'Anuncios para quienes están listos para contactarte' },
+      };
+      const byStage = { TOFU: [], MOFU: [], BOFU: [], OTHER: [] };
+      ads.forEach(ad => { (byStage[ad.funnel_stage] || byStage.OTHER).push(ad); });
+
+      const renderAd = (ad, idx) => {
+        const done = ad.client_approved !== 0;
+        const approved = ad.client_approved === 1;
+        return `
+          <div class="ad-row ${done ? 'done' : ''}">
+            <div class="ad-num">${ad.angle ? ad.angle.toUpperCase().replace(/_/g, ' ') : 'Anuncio ' + idx}</div>
+            <div class="ad-head">${ad.headline}</div>
+            <div class="ad-desc">${ad.description}</div>
+            <div class="ad-cta-preview">${ad.cta_text}</div>
+            ${done ? `
+              <span class="ad-status ${approved ? 'approved' : 'rejected'}">${approved ? '✓ Aprobado' : '✗ Rechazado'}</span>
+              ${ad.client_feedback ? '<p style="color:#8b8fa3;font-size:0.8rem;margin-top:8px;">Tu comentario: ' + ad.client_feedback + '</p>' : ''}
+            ` : `
+              <div class="ad-actions">
+                <button class="btn btn-approve" onclick="approveAd('${ad.id}')">✓ Aprobar</button>
+                <button class="btn btn-reject" onclick="showReject('${ad.id}')">✗ Cambiar algo</button>
+                <input type="text" class="feedback-input" id="fb-${ad.id}" placeholder="¿Qué cambiarías?">
+                <button class="btn btn-reject" id="confirm-${ad.id}" style="display:none;" onclick="rejectAd('${ad.id}')">Enviar feedback</button>
+              </div>
+            `}
+          </div>`;
+      };
+
+      let html = '';
+      if (ads.length === 0) {
+        html = '<p style="color:#8b8fa3;">Tus anuncios todavía no fueron generados.</p>';
+      } else {
+        ['TOFU', 'MOFU', 'BOFU'].forEach(stage => {
+          if (byStage[stage].length === 0) return;
+          const info = stageInfo[stage];
+          html += `
+            <div style="margin-top:20px;margin-bottom:12px;padding:12px 16px;background:#0d1025;border-left:3px solid #4f6ef7;border-radius:6px;">
+              <div style="color:#fff;font-weight:600;font-size:0.95rem;">${info.label} <span style="color:#8b8fa3;font-size:0.8rem;font-weight:400;">(${byStage[stage].length} anuncios)</span></div>
+              <div style="color:#8b8fa3;font-size:0.8rem;margin-top:2px;">${info.desc}</div>
+            </div>
+          `;
+          byStage[stage].forEach((ad, i) => { html += renderAd(ad, i + 1); });
+        });
+        if (byStage.OTHER.length > 0) {
+          html += '<h4 style="color:#8b8fa3;margin-top:20px;">Otros</h4>';
+          byStage.OTHER.forEach((ad, i) => { html += renderAd(ad, i + 1); });
+        }
+      }
+      document.getElementById('adsContainer').innerHTML = html;
 
       if (d.summary.pending_approval === 0) {
         document.getElementById('approveAllSection').style.display = 'none';

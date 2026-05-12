@@ -31,8 +31,10 @@ router.get('/me', requireClientToken, async (req: any, res: Response) => {
   // Only approved ads (the ones the client can review/see), no validation_notes (internal)
   const ads = await db.prepare(
     `SELECT id, headline, description, cta_text, format, client_approved, client_feedback,
+            funnel_stage, angle, creative_url,
             impressions, clicks, messages, spend_usd
-     FROM ads WHERE client_id = ? AND validation_status = 'approved' ORDER BY created_at`
+     FROM ads WHERE client_id = ? AND validation_status = 'approved'
+     ORDER BY CASE funnel_stage WHEN 'TOFU' THEN 1 WHEN 'MOFU' THEN 2 WHEN 'BOFU' THEN 3 ELSE 4 END, created_at`
   ).all<any>(c.id);
 
   // Compute the simple inversion view (no CPM/CPC breakdown)
