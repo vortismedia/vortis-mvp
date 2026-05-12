@@ -1,9 +1,61 @@
 // Public API for clients - accessed via secure access_token (no admin auth needed)
 // This is what the client's dashboard at /mi-campana?token=XXX uses
 import { Router, Request, Response, NextFunction } from 'express';
+import { v4 as uuid } from 'uuid';
+import crypto from 'crypto';
 import { getDb } from '../db/database';
+import { sendPaymentConfirmedToClient, sendClientPaidToAdmin } from '../services/email';
+import { sendPaymentConfirmedWhatsApp } from '../services/whatsapp';
 
 const router = Router();
+
+/**
+ * POST /api/public/fake-checkout
+ * Public endpoint: anyone with the checkout URL can simulate a payment.
+ * Creates the client + sends email/WhatsApp/admin notifications.
+ * Same flow as admin's /api/payment/simulate but accessible without admin login.
+ */
+router.post('/fake-checkout', async (req: Request, res: Response) => {
+  try {
+    const { contact_name, contact_email, contact_phone, business_name } = req.body;
+    if (!contact_name || !contact_email || !contact_phone || !business_name) {
+      return res.status(400).json({ error: 'Faltan datos requeridos' });
+    }
+
+    const db = getDb();
+    const clientId = uuid();
+    const accessToken = crypto.randomBytes(32).toString('base64url');
+
+    await db.prepare(
+      `INSERT INTO clients (
+        id, access_token, business_name, industry, city, country, product_service,
+        campaign_objective, contact_email, contact_phone, contact_name,
+        payment_status, plan_price_usd, status
+      ) VALUES (?, ?, ?, 'pending', 'pending', 'Argentina', 'Pendiente onboarding',
+                'Mensajes por WhatsApp', ?, ?, ?, 'paid', 299, 'paid_pending_onboarding')`
+    ).run(
+      clientId, accessToken, business_name,
+      contact_email, contact_phone, contact_name
+    );
+
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const onboardingLink = `${appUrl}/?cid=${clientId}&token=${accessToken}`;
+
+    const withTimeout = <T,>(p: Promise<T>, ms: number, fb: T): Promise<T> =>
+      Promise.race([p, new Promise<T>(r => setTimeout(() => r(fb), ms))]);
+
+    await Promise.all([
+      withTimeout(sendPaymentConfirmedToClient({ contact_name, contact_email, onboarding_link: onboardingLink, plan_price_usd: 299 }), 15000, false),
+      withTimeout(sendPaymentConfirmedWhatsApp({ contact_name, contact_phone, onboarding_link: onboardingLink }), 10000, false),
+      withTimeout(sendClientPaidToAdmin({ business_name, contact_name, contact_email, contact_phone, plan_price_usd: 299, id: clientId }), 15000, false),
+    ]);
+
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error('[FakeCheckout Error]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Middleware: load client by access_token, attach to req.client
 async function requireClientToken(req: any, res: Response, next: NextFunction) {

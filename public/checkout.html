@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e27">
+  <title>Vortis Media - Suscripción $299</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { overflow-x: hidden; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
+    .container { max-width: 520px; margin: 0 auto; padding: 32px 20px; }
+    .logo { text-align: center; margin-bottom: 28px; }
+    .logo h1 { font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: 2px; }
+    .logo p { color: #8b8fa3; margin-top: 6px; font-size: 0.9rem; }
+
+    .plan-card { background: linear-gradient(135deg, #1a1f45, #141832); border: 1px solid #4f6ef7; border-radius: 16px; padding: 28px 24px; margin-bottom: 24px; text-align: center; }
+    .plan-card .price { font-size: 3rem; font-weight: 800; color: #fff; line-height: 1; }
+    .plan-card .price-suffix { color: #8b8fa3; font-size: 0.95rem; margin-top: 6px; }
+    .plan-card .features { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2f52; text-align: left; }
+    .plan-card .feature { padding: 8px 0; color: #b0b4cc; font-size: 0.9rem; display: flex; gap: 10px; align-items: flex-start; }
+    .plan-card .feature::before { content: '✓'; color: #4ade80; font-weight: 700; flex-shrink: 0; }
+
+    .form-card { background: #141832; border: 1px solid #1e2345; border-radius: 14px; padding: 28px 22px; }
+    .form-card h2 { font-size: 1.15rem; color: #fff; margin-bottom: 6px; }
+    .form-card .sub { font-size: 0.85rem; color: #8b8fa3; margin-bottom: 22px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.8rem; color: #b0b4cc; margin-bottom: 6px; font-weight: 500; }
+    .form-group input { width: 100%; padding: 13px 14px; background: #0d1025; border: 1px solid #2a2f52; border-radius: 9px; color: #fff; font-size: 16px; }
+    .form-group input:focus { outline: none; border-color: #4f6ef7; }
+    .required { color: #ff6b6b; }
+
+    .btn-pay { width: 100%; padding: 16px; background: linear-gradient(135deg, #0d9f4f, #0a7f3f); border: none; border-radius: 11px; color: #fff; font-weight: 700; font-size: 1.05rem; cursor: pointer; margin-top: 10px; }
+    .btn-pay:hover { box-shadow: 0 4px 20px rgba(13,159,79,0.35); }
+    .btn-pay:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .demo-badge { background: #2d2a0d; border: 1px solid #facc15; padding: 10px 14px; border-radius: 8px; color: #facc15; font-size: 0.8rem; text-align: center; margin-bottom: 18px; }
+
+    .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px; border-radius: 8px; color: #ff6b6b; font-size: 0.9rem; margin-bottom: 14px; display: none; }
+    .error-msg.show { display: block; }
+
+    .success-card { text-align: center; padding: 48px 22px; display: none; }
+    .success-card.show { display: block; }
+    .success-card .check { font-size: 4rem; }
+    .success-card h2 { color: #4ade80; margin: 16px 0 10px; }
+    .success-card p { color: #b0b4cc; line-height: 1.6; font-size: 0.95rem; }
+    .success-card .next-steps { background: #0d1025; border: 1px solid #2a2f52; border-radius: 10px; padding: 18px; margin-top: 24px; text-align: left; }
+    .success-card .next-steps strong { color: #fff; }
+
+    @media (max-width: 480px) {
+      .plan-card .price { font-size: 2.4rem; }
+      .container { padding: 20px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>VORTIS MEDIA</h1>
+      <p>IA generativa para campañas publicitarias</p>
+    </div>
+
+    <div id="checkoutView">
+      <div class="demo-badge">
+        🧪 MODO DEMO — Este es un pago simulado para validar el flujo. No se cobra nada real.
+      </div>
+
+      <div class="plan-card">
+        <div class="price">USD $299</div>
+        <div class="price-suffix">por mes · Plan completo</div>
+        <div class="features">
+          <div class="feature">5 anuncios x 3 estrategias generados por IA (15 totales)</div>
+          <div class="feature">Segmentación profesional en Meta Ads</div>
+          <div class="feature">Inversión publicitaria de $200 USD/mes incluida</div>
+          <div class="feature">Consultor IA por WhatsApp 24/7</div>
+          <div class="feature">Optimización continua</div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h2>Datos del titular</h2>
+        <p class="sub">Para procesar tu suscripción.</p>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <form id="payForm">
+          <div class="form-group">
+            <label>Nombre completo <span class="required">*</span></label>
+            <input type="text" name="contact_name" required placeholder="Juan Pérez">
+          </div>
+
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input type="email" name="contact_email" required placeholder="tu@email.com">
+          </div>
+
+          <div class="form-group">
+            <label>WhatsApp <span class="required">*</span></label>
+            <input type="text" name="contact_phone" required placeholder="+54 9 11 1234-5678">
+          </div>
+
+          <div class="form-group">
+            <label>Nombre de tu negocio <span class="required">*</span></label>
+            <input type="text" name="business_name" required placeholder="Mi Negocio SRL">
+          </div>
+
+          <button type="submit" class="btn-pay" id="btnPay">💳 Pagar USD $299 (Simulado)</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="success-card" id="successCard">
+      <div class="check">✅</div>
+      <h2>Pago confirmado</h2>
+      <p>Te enviamos un email y WhatsApp con el link para completar el onboarding de tu negocio.</p>
+      <div class="next-steps">
+        <p><strong>Próximos pasos:</strong></p>
+        <ol style="padding-left: 22px; margin-top: 10px; color: #b0b4cc; line-height: 1.8;">
+          <li>Revisá tu <strong>email</strong> y <strong>WhatsApp</strong></li>
+          <li>Completá el onboarding (5-10 min)</li>
+          <li>Nuestra IA genera tu campaña automáticamente</li>
+          <li>Aprobás los anuncios desde tu celular</li>
+          <li>Lanzamos en Meta Ads y vas viendo resultados</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('payForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnPay');
+      const err = document.getElementById('errorMsg');
+      err.classList.remove('show');
+      btn.disabled = true;
+      btn.textContent = 'Procesando pago...';
+
+      const data = Object.fromEntries(new FormData(e.target).entries());
+
+      try {
+        const res = await fetch('/api/public/fake-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.success) {
+          document.getElementById('checkoutView').style.display = 'none';
+          document.getElementById('successCard').classList.add('show');
+        } else {
+          err.textContent = result.error || 'Error procesando el pago';
+          err.classList.add('show');
+          btn.disabled = false;
+          btn.textContent = '💳 Pagar USD $299 (Simulado)';
+        }
+      } catch (e) {
+        err.textContent = 'Error de conexión. Probá de nuevo.';
+        err.classList.add('show');
+        btn.disabled = false;
+        btn.textContent = '💳 Pagar USD $299 (Simulado)';
+      }
+    });
+  </script>
+</body>
+</html>

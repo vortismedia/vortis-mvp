@@ -60,6 +60,9 @@ app.get('/api/config/cloudinary', (_req, res) => {
 app.get('/login', (_req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'login.html'));
 });
+app.get('/checkout', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'checkout.html'));
+});
 
 // Internal pages (require admin login)
 app.get('/panel', requireAuth, (_req, res) => {
