@@ -206,6 +206,20 @@ CREATE TABLE IF NOT EXISTS client_assets (
   uploaded_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Migrations: add new columns to existing ads table (no-op if already present)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='ad_set_id') THEN
+    ALTER TABLE ads ADD COLUMN ad_set_id TEXT REFERENCES ad_sets(id);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='funnel_stage') THEN
+    ALTER TABLE ads ADD COLUMN funnel_stage TEXT;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='ads' AND column_name='angle') THEN
+    ALTER TABLE ads ADD COLUMN angle TEXT;
+  END IF;
+END $$;
+
 -- RAG knowledge base
 CREATE TABLE IF NOT EXISTS knowledge_base (
   id TEXT PRIMARY KEY,
