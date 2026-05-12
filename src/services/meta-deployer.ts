@@ -36,9 +36,9 @@ export async function deployToMeta(campaignId: string): Promise<{
   console.log(`[Meta Deploy] Starting funnel deployment for "${client.business_name}"...`);
   console.log(`  → ${adSets.length} ad sets, ${allAds.length} ads total`);
 
-  // Step 1: Create Campaign on Meta
+  // Step 1: Create Campaign on Meta (use business name only, clean hierarchy)
   const metaCampaignId = await createMetaCampaign({
-    name: `Vortis - ${client.business_name}`,
+    name: client.business_name,
     objective: client.campaign_objective,
     dailyBudgetCents: Math.round((client.daily_budget_usd || 6.67) * 100),
     status: 'PAUSED',
@@ -62,9 +62,14 @@ export async function deployToMeta(campaignId: string): Promise<{
 
     const resolvedTargeting = await resolveTargeting(stageTargeting, client);
 
-    // Create ad set on Meta
+    // Create ad set on Meta (clean name: just the stage)
+    const stageLabel: Record<string, string> = {
+      TOFU: 'TOFU - Awareness',
+      MOFU: 'MOFU - Consideración',
+      BOFU: 'BOFU - Conversión',
+    };
     const metaAdSetId = await createMetaAdSet({
-      name: `${adSet.stage} - ${client.business_name}`,
+      name: stageLabel[adSet.stage] || adSet.stage,
       campaignId: metaCampaignId,
       dailyBudgetCents: adSet.daily_budget_cents,
       targeting: resolvedTargeting,
@@ -97,7 +102,7 @@ export async function deployToMeta(campaignId: string): Promise<{
       });
 
       const metaAdId = await createMetaAd({
-        name: `${adSet.stage} Ad ${i + 1} (${ad.angle || 'general'}) - ${client.business_name}`,
+        name: `${adSet.stage} ${i + 1} - ${ad.angle || 'general'}`,
         adSetId: metaAdSetId,
         headline: ad.headline,
         body: ad.description,
