@@ -206,18 +206,24 @@ Meta está en proceso de optimización — después de 1.000 impresiones por anu
 
   if (q.includes('cancel') || q.includes('pausar') || q.includes('parar') || q.includes('detener')) {
     return {
-      answer: `Podés pausar tu campaña en cualquier momento desde tu dashboard. Al pausar:
+      answer: `Si necesitás pausar tu campaña, escribinos directamente y lo gestionamos por vos. Nosotros nos encargamos.`,
+      recommendations: ['Cualquier cambio, respondé este chat y te respondemos.'],
+    };
+  }
 
-• Los anuncios dejan de mostrarse inmediatamente
-• No se genera más gasto
-• Se conservan todos los datos y la optimización acumulada
-• Podés reactivar cuando quieras
+  if (q.includes('respond') || q.includes('contest') || q.includes('mensaje') && (q.includes('llega') || q.includes('recibir'))) {
+    return {
+      answer: `Cuando llegan mensajes de WhatsApp, respondé en menos de 1 hora. Esa es la diferencia entre cerrar venta o perderla.
 
-Si pausás por más de 7 días, Meta reinicia parcialmente la fase de aprendizaje al reactivar.`,
-      recommendations: [
-        'Si necesitás pausar, mejor hacerlo por períodos cortos (menos de 7 días)',
-        'Considerá reducir presupuesto en vez de pausar completamente',
-      ],
+Tip rápido: tené 2-3 respuestas listas para preguntas frecuentes (precio, horarios, ubicación). Después atendé personal.`,
+      recommendations: ['Respondé rápido', 'Tené respuestas pre-armadas', 'Después de la primera consulta, atendé como una persona'],
+    };
+  }
+
+  if (q.includes('factur') || q.includes('cobr') || q.includes('mensual') && q.includes('cobr')) {
+    return {
+      answer: `Tu plan es de $${client.plan_price_usd || 299} USD/mes. Incluye el gestión de Vortis + la inversión en anuncios. Te cobramos automáticamente cada mes el mismo día que arrancaste.`,
+      recommendations: ['Cualquier consulta de facturación, respondé este chat.'],
     };
   }
 

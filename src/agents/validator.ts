@@ -16,8 +16,10 @@ Políticas clave de Meta Ads que debes verificar:
 
 Para cada anuncio, indica:
 - APROBADO: cumple con todas las políticas
-- AJUSTADO: requirió cambios menores (incluir versión corregida)
-- RECHAZADO: viola políticas graves (explicar por qué)
+- AJUSTADO: requirió cambios menores → SIEMPRE incluí corrected_headline y corrected_body con la versión arreglada (NUNCA dejes vacío)
+- RECHAZADO: solo si viola políticas GRAVES (claims médicos, discriminación, fraude). Para problemas menores SIEMPRE preferí AJUSTADO sobre RECHAZADO.
+
+REGLA CRÍTICA: Tratá de NO rechazar nada. Si tiene un problema, AJUSTAlo. Necesitamos los 15 anuncios. Solo RECHAZADO en casos extremos.
 
 IMPORTANTE: Responde SOLAMENTE en formato JSON válido.
 

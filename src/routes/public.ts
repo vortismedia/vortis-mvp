@@ -93,9 +93,7 @@ router.post('/approve', requireClientToken, async (req: any, res: Response) => {
   ).get<any>(req.client.id);
 
   if (parseInt(String(pendingCount?.cnt || 0), 10) === 0) {
-    await db.prepare(
-      "UPDATE clients SET status = 'approved_by_client', updated_at = NOW() WHERE id = ?"
-    ).run(req.client.id);
+    await autoDeployAndActivate(req.client.id);
   }
 
   res.json({ success: true });
@@ -126,12 +124,81 @@ router.post('/approve-all', requireClientToken, async (req: any, res: Response) 
      WHERE client_id = ? AND validation_status = 'approved' AND client_approved = 0`
   ).run(req.client.id);
 
-  await db.prepare(
-    "UPDATE clients SET status = 'approved_by_client', updated_at = NOW() WHERE id = ?"
-  ).run(req.client.id);
+  await autoDeployAndActivate(req.client.id);
 
   res.json({ success: true, approved: result.changes });
 });
+
+// Auto-deploy + auto-activate flow (runs in background after client approves all ads)
+async function autoDeployAndActivate(clientId: string): Promise<void> {
+  const db = getDb();
+
+  // Set status and prevent double-trigger via deploy_lock
+  const lock = await db.prepare(
+    "UPDATE clients SET status = 'deploying', updated_at = NOW() WHERE id = ? AND status NOT IN ('deployed','active','deploying') RETURNING id"
+  ).all(clientId);
+  if (lock.length === 0) return; // Already deploying or done
+
+  // Fire-and-forget background deploy + activate
+  (async () => {
+    try {
+      const campaign = await db.prepare(
+        "SELECT id, meta_campaign_id FROM campaigns WHERE client_id = ? ORDER BY created_at DESC LIMIT 1"
+      ).get<any>(clientId);
+      if (!campaign) throw new Error('No campaign found');
+
+      // Only deploy if not already deployed
+      if (!campaign.meta_campaign_id) {
+        const { deployToMeta } = await import('../services/meta-deployer');
+        await deployToMeta(campaign.id);
+      }
+
+      // Re-read meta_campaign_id (just set by deploy)
+      const c2 = await db.prepare("SELECT meta_campaign_id FROM campaigns WHERE id = ?").get<any>(campaign.id);
+      if (!c2?.meta_campaign_id) throw new Error('Deploy did not set meta_campaign_id');
+
+      // Activate
+      const { updateCampaignStatus } = await import('../services/meta-ads');
+      await updateCampaignStatus(c2.meta_campaign_id, 'ACTIVE');
+
+      await db.prepare(
+        "UPDATE campaigns SET meta_status = 'ACTIVE', updated_at = NOW() WHERE id = ?"
+      ).run(campaign.id);
+      await db.prepare(
+        "UPDATE clients SET status = 'active', updated_at = NOW() WHERE id = ?"
+      ).run(clientId);
+
+      // Notify client + admin
+      const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get<any>(clientId);
+      const { sendCampaignActiveToClient, sendCampaignActiveToAdmin } = await import('../services/email');
+      const { sendCampaignActiveWhatsApp } = await import('../services/whatsapp');
+
+      sendCampaignActiveToClient({
+        contact_name: client.contact_name,
+        contact_email: client.contact_email,
+        business_name: client.business_name,
+        access_token: client.access_token,
+      }).catch(() => {});
+      sendCampaignActiveToAdmin({
+        business_name: client.business_name,
+        contact_name: client.contact_name,
+        id: client.id,
+      }).catch(() => {});
+      sendCampaignActiveWhatsApp({
+        contact_name: client.contact_name,
+        contact_phone: client.contact_phone || '',
+        business_name: client.business_name,
+      }).catch(() => {});
+
+      console.log(`[AutoDeploy] DONE for ${client.business_name}`);
+    } catch (err: any) {
+      console.error('[AutoDeploy] FAILED:', err.message);
+      await db.prepare(
+        "UPDATE clients SET status = 'error', updated_at = NOW() WHERE id = ?"
+      ).run(clientId);
+    }
+  })();
+}
 
 // POST /api/public/consultant - client chat with AI
 router.post('/consultant', requireClientToken, async (req: any, res: Response) => {

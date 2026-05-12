@@ -2,11 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e27">
   <title>Vortis Media - Mi Campaña</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
+    html { overflow-x: hidden; }
 
     .header { background: #141832; border-bottom: 1px solid #1e2345; padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; }
     .header h1 { font-size: 1.3rem; color: #fff; font-weight: 700; letter-spacing: 1px; }
@@ -108,7 +110,39 @@
 
     .error-msg { background: #2d1515; border: 1px solid #5a2020; padding: 12px; border-radius: 8px; color: #ff6b6b; text-align: center; margin-top: 16px; }
 
-    @media (max-width: 768px) { .metrics { grid-template-columns: 1fr; } .info-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      body { font-size: 15px; }
+      .header { padding: 12px 16px; }
+      .header h1 { font-size: 1.1rem; }
+      .main { padding: 16px 12px; }
+      .lookup { padding: 24px 16px; }
+      .lookup-form { flex-direction: column; }
+      .lookup-form input, .lookup-form button { width: 100%; }
+      .status-banner { padding: 20px 16px; }
+      .status-banner .top { flex-wrap: wrap; }
+      .status-info h2 { font-size: 1.1rem; }
+      .metrics { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .metric { padding: 14px 8px; }
+      .metric .num { font-size: 1.4rem; }
+      .info-grid { grid-template-columns: 1fr; }
+      .tabs { flex-wrap: wrap; }
+      .tab { font-size: 0.75rem; padding: 10px 8px; flex: 1 1 45%; min-width: 0; }
+      .card { padding: 16px; }
+      .card h3 { font-size: 0.95rem; flex-wrap: wrap; gap: 4px; }
+      .ad-row { padding: 14px; }
+      .ad-row .ad-head { font-size: 0.95rem; }
+      .ad-row .ad-desc { font-size: 0.8rem; }
+      .ad-actions { flex-direction: column; align-items: stretch; }
+      .btn { width: 100%; }
+      .feedback-input { width: 100%; min-width: 0; }
+      .progress-stepper { flex-wrap: wrap; gap: 6px; }
+      .step-item { flex: 1 1 30%; font-size: 0.7rem; padding: 8px 4px; }
+      .chat-msgs { height: 300px; }
+      .chat-msg { max-width: 90%; font-size: 0.8rem; }
+      .chat-suggestion { font-size: 0.7rem; padding: 5px 10px; }
+      .big-cta { padding: 20px 16px; }
+      .big-cta button { width: 100%; padding: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -230,15 +264,13 @@
               <div class="chat-msg bot">¡Hola! Soy tu consultor de Vortis. Preguntame lo que quieras sobre tu campaña: presupuesto, métricas, mejoras, horarios, audiencia, lo que sea.</div>
             </div>
             <div class="chat-suggestions">
-              <span class="chat-suggestion" onclick="askQ('¿Cómo van mis resultados?')">📊 Mis resultados</span>
-              <span class="chat-suggestion" onclick="askQ('¿Qué pasa si aumento el presupuesto 30%?')">💰 Subir presupuesto</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cuál es el mejor horario para mostrar mis anuncios?')">🕐 Mejor horario</span>
-              <span class="chat-suggestion" onclick="askQ('¿A quién le estamos mostrando los anuncios?')">🎯 Mi audiencia</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cómo están funcionando mis anuncios?')">📝 Performance de ads</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cómo puedo mejorar mis resultados?')">💡 Cómo mejorar</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cuánto voy a recibir de mensajes este mes?')">💬 Estimación mensajes</span>
-              <span class="chat-suggestion" onclick="askQ('¿Puedo pausar la campaña?')">⏸ Pausar</span>
-              <span class="chat-suggestion" onclick="askQ('¿Cómo funciona el cobro mensual?')">💳 Mi facturación</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo van mis resultados?')">📊 Resultados</span>
+              <span class="chat-suggestion" onclick="askQ('¿A qué público le estoy llegando?')">🎯 Mi audiencia</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cuántos mensajes voy a recibir?')">💬 Mensajes esperados</span>
+              <span class="chat-suggestion" onclick="askQ('¿Qué anuncio funciona mejor?')">📝 Mejor anuncio</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo respondo a los mensajes que llegan?')">📞 Tips de respuesta</span>
+              <span class="chat-suggestion" onclick="askQ('¿Qué pasa si invierto más?')">💰 Invertir más</span>
+              <span class="chat-suggestion" onclick="askQ('¿Cómo es mi facturación mensual?')">💳 Facturación</span>
             </div>
             <div class="chat-input">
               <input type="text" id="chatIn" placeholder="Escribí tu pregunta..." onkeypress="if(event.key==='Enter')sendChat()">

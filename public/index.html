@@ -2,11 +2,13 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0e27">
   <title>Vortis Media - Onboarding</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0e27; color: #e0e0e0; min-height: 100vh; overflow-x: hidden; }
+    html { overflow-x: hidden; }
     .container { max-width: 680px; margin: 0 auto; padding: 40px 20px; }
     .logo { text-align: center; margin-bottom: 40px; }
     .logo h1 { font-size: 2.5rem; font-weight: 800; color: #fff; letter-spacing: 2px; }
@@ -74,7 +76,24 @@
     .btn-skip { background: none; border: 1px solid #2a2f52; color: #8b8fa3; padding: 14px; border-radius: 10px; width: 100%; cursor: pointer; font-size: 0.9rem; margin-top: 8px; }
     .btn-skip:hover { border-color: #4f6ef7; color: #fff; }
 
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .form-card { padding: 24px; } .step-line { width: 30px; } }
+    @media (max-width: 768px) {
+      body { font-size: 15px; }
+      .container { padding: 20px 12px; }
+      .logo h1 { font-size: 1.8rem; }
+      .logo p { font-size: 0.85rem; }
+      .form-card { padding: 20px 16px; }
+      .form-row { grid-template-columns: 1fr; }
+      .form-section h3 { font-size: 1rem; }
+      .form-group input, .form-group textarea, .form-group select { font-size: 16px; padding: 12px 14px; }
+      .step-line { width: 30px; }
+      .step-num { width: 28px; height: 28px; font-size: 0.8rem; }
+      .step-label { font-size: 0.7rem; }
+      .stepper { gap: 6px; }
+      .step { gap: 6px; }
+      .btn-submit { padding: 14px; font-size: 1rem; }
+      .upload-zone { padding: 30px 16px; }
+      .uploaded-images { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+    }
   </style>
 </head>
 <body>
@@ -282,9 +301,6 @@
       <p style="margin-top:24px; color: #4f6ef7;" id="clientIdDisplay"></p>
     </div>
 
-    <div class="admin-link">
-      <a href="/admin">Panel de Administracion</a>
-    </div>
   </div>
 
   <!-- Cloudinary Upload Widget -->

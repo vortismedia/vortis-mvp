@@ -50,10 +50,11 @@ CTA: fuerte, accionable ("Reservá ahora", "Escribime ya", "Comprá", "Contactan
 REGLAS GENERALES
 ═══════════════════════════════════════════════════
 
-FORMATO:
-- Headline: máximo 40 caracteres, IMPACTANTE (NO genérico tipo "La mejor opción")
-- Descripción: máximo 125 caracteres para feed
-- Body: 50-150 palabras, persuasivo, específico
+FORMATO (CORTO Y PICANTE — el cliente abre Instagram y desliza en 2 segundos):
+- Headline: máximo 40 caracteres, PUNCHY (NO genérico tipo "La mejor opción")
+- Descripción: máximo 90 caracteres
+- Body: 40-80 palabras MÁXIMO (no más). Una idea por anuncio.
+- Frases cortas. Un mensaje principal. CTA al final.
 - NO prometer ventas, ROI, ni resultados garantizados
 - NO usar palabras prohibidas
 - SÍ usar palabras mandatorias

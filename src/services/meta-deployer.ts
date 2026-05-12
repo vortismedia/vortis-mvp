@@ -62,11 +62,11 @@ export async function deployToMeta(campaignId: string): Promise<{
 
     const resolvedTargeting = await resolveTargeting(stageTargeting, client);
 
-    // Create ad set on Meta (clean name: just the stage)
+    // Create ad set on Meta (human-friendly Spanish names)
     const stageLabel: Record<string, string> = {
-      TOFU: 'TOFU - Awareness',
-      MOFU: 'MOFU - Consideración',
-      BOFU: 'BOFU - Conversión',
+      TOFU: 'Conocimiento (audiencia fría)',
+      MOFU: 'Consideración (audiencia tibia)',
+      BOFU: 'Conversión (audiencia caliente)',
     };
     const metaAdSetId = await createMetaAdSet({
       name: stageLabel[adSet.stage] || adSet.stage,
@@ -101,8 +101,20 @@ export async function deployToMeta(campaignId: string): Promise<{
         city: client.city,
       });
 
+      // Human-friendly angle labels
+      const angleLabels: Record<string, string> = {
+        curiosidad: 'Curiosidad', pattern_interrupt: 'Llamado de atención',
+        storytelling: 'Historia', dato: 'Dato impactante', pregunta: 'Pregunta',
+        diferenciador: 'Diferenciador', prueba_social: 'Prueba social',
+        garantia: 'Garantía', comparativa: 'Comparativa', faq: 'Resuelve duda',
+        oferta: 'Oferta', urgencia: 'Urgencia', friccion: 'Sin fricción',
+        cta_directo: 'Llamado directo', recordatorio: 'Recordatorio',
+      };
+      const stageShort = adSet.stage === 'TOFU' ? 'Conocer' : adSet.stage === 'MOFU' ? 'Considerar' : 'Convertir';
+      const angleHuman = angleLabels[ad.angle || ''] || (ad.angle || 'General');
+
       const metaAdId = await createMetaAd({
-        name: `${adSet.stage} ${i + 1} - ${ad.angle || 'general'}`,
+        name: `${stageShort} ${i + 1} - ${angleHuman}`,
         adSetId: metaAdSetId,
         headline: ad.headline,
         body: ad.description,

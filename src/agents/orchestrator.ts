@@ -211,11 +211,13 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
+  // Keep ALL 15 ads (mark as approved unless validator REJECTED for serious policy violation).
+  // We use corrected versions if validator suggested them. We never drop ads to keep the funnel intact.
   for (let i = 0; i < validatedAds.length; i++) {
     const ad = validatedAds[i];
     const val = validations[i];
-    const isApproved = val?.status === 'APROBADO' || val?.status === 'AJUSTADO';
-    // Fallback if AI didn't tag funnel_stage: distribute by position (1-5=TOFU, 6-10=MOFU, 11-15=BOFU)
+    const isHardReject = val?.status === 'RECHAZADO';
+    // Fallback funnel stage by position
     const stage = ad.funnel_stage || (i < 5 ? 'TOFU' : i < 10 ? 'MOFU' : 'BOFU');
     const adSetId = adSetIdByStage[stage] || adSetIdByStage['TOFU'];
 
@@ -225,27 +227,37 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
       val?.corrected_body || ad.body,
       ad.cta_text || 'Enviar mensaje',
       ad.cta_type || 'SEND_MESSAGE',
-      isApproved ? 'approved' : 'rejected',
+      isHardReject ? 'rejected' : 'approved',
       val?.notes || null
     );
   }
 
   console.log(`  -> Created 3 ad sets + ${validatedAds.length} ads across funnel stages`);
 
-  // Client status: pending_admin_review (NOT campaign_ready yet — admin must approve first)
+  // Auto-approve: IA's validator already filtered bad ads, so we trust it and notify client directly.
+  // Admin still gets a notification but the campaign goes straight to "campaign_ready".
   await db.prepare(
-    `UPDATE clients SET status = 'pending_admin_review', updated_at = NOW() WHERE id = ?`
+    `UPDATE clients SET status = 'campaign_ready', admin_reviewed = 1, admin_reviewed_at = NOW(), updated_at = NOW() WHERE id = ?`
   ).run(clientId);
 
-  // Notify ADMIN (Vortis team) that there's a campaign to review.
-  // The client gets notified ONLY after admin approves.
+  // Notify admin (informational) + client (action needed)
   const { sendAdminReviewNotification } = await import('../services/email');
+  const { sendAdsReadyForApprovalWhatsApp } = await import('../services/whatsapp');
+
   sendAdminReviewNotification({
     business_name: client.business_name,
     contact_name: client.contact_name,
     industry: client.industry,
     id: client.id,
   }).catch((err) => console.error('[Orchestrator] Admin notify failed:', err));
+
+  // Auto-send WhatsApp to client: "your ads are ready to approve"
+  sendAdsReadyForApprovalWhatsApp({
+    contact_name: client.contact_name,
+    contact_phone: client.contact_phone || '',
+    business_name: client.business_name,
+    access_token: client.access_token,
+  }).catch((err) => console.error('[Orchestrator] Client WhatsApp failed:', err));
 
   console.log(`\n[Orchestrator] DONE!`);
   console.log(`  Total tokens: ${totalTokens}`);
