@@ -20,7 +20,7 @@ router.post('/:campaignId/deploy', async (req, res) => {
     if (campaign.status !== 'ready') return res.status(400).json({ error: `Campaign is not ready (status: ${campaign.status})` });
 
     const result = await deployToMeta(campaignId);
-    res.json({ success: true, metaCampaignId: result.metaCampaignId, metaAdSetId: result.metaAdSetId, adsCreated: result.metaAdIds.length, status: 'PAUSED' });
+    res.json({ success: true, metaCampaignId: result.metaCampaignId, metaAdSetIds: result.metaAdSetIds, adsCreated: result.metaAdIds.length, status: 'PAUSED' });
   } catch (err: any) {
     console.error('[Meta Deploy Error]', err);
     res.status(500).json({ error: err.message });

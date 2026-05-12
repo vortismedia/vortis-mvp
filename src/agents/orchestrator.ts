@@ -174,22 +174,53 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
     `UPDATE campaigns SET business_analysis = ?, targeting_config = ?, budget_config = ?, status = 'ready', updated_at = NOW() WHERE id = ?`
   ).run(JSON.stringify(analysis), JSON.stringify(segmentation), JSON.stringify(budget), campaignId);
 
-  // Save ads
+  // ============ Save 3 Ad Sets (TOFU/MOFU/BOFU) ============
+  const adSetsConfig = segmentation?.ad_sets || [];
+  const dailyBudgetCents = Math.round((client.daily_budget_usd || 6.67) * 100);
+  // Distribute budget: TOFU 40%, MOFU 30%, BOFU 30%
+  const budgetSplit = { TOFU: 0.40, MOFU: 0.30, BOFU: 0.30 };
+
+  const adSetIdByStage: Record<string, string> = {};
+  const insertAdSet = db.prepare(
+    `INSERT INTO ad_sets (id, campaign_id, client_id, stage, name, targeting_config, daily_budget_cents)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`
+  );
+
+  for (const stage of ['TOFU', 'MOFU', 'BOFU'] as const) {
+    const config = adSetsConfig.find((s: any) => s.stage === stage) || { stage, name: stage, targeting: {} };
+    const adSetId = uuid();
+    const stageBudget = Math.round(dailyBudgetCents * budgetSplit[stage]);
+    await insertAdSet.run(
+      adSetId,
+      campaignId,
+      clientId,
+      stage,
+      config.name || `${stage} - ${client.business_name}`,
+      JSON.stringify(config.targeting || {}),
+      stageBudget
+    );
+    adSetIdByStage[stage] = adSetId;
+  }
+
+  // ============ Save Ads (15 total, organized by stage) ============
   const validatedAds = copies?.ads || [];
   const validations = validation?.validations || [];
 
   const insertAd = db.prepare(
-    `INSERT INTO ads (id, campaign_id, client_id, headline, description, cta_text, cta_type, validation_status, validation_notes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO ads (id, campaign_id, client_id, ad_set_id, funnel_stage, angle, headline, description, cta_text, cta_type, validation_status, validation_notes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
 
   for (let i = 0; i < validatedAds.length; i++) {
     const ad = validatedAds[i];
     const val = validations[i];
     const isApproved = val?.status === 'APROBADO' || val?.status === 'AJUSTADO';
+    // Fallback if AI didn't tag funnel_stage: distribute by position (1-5=TOFU, 6-10=MOFU, 11-15=BOFU)
+    const stage = ad.funnel_stage || (i < 5 ? 'TOFU' : i < 10 ? 'MOFU' : 'BOFU');
+    const adSetId = adSetIdByStage[stage] || adSetIdByStage['TOFU'];
 
     await insertAd.run(
-      uuid(), campaignId, clientId,
+      uuid(), campaignId, clientId, adSetId, stage, ad.angle || null,
       val?.corrected_headline || ad.headline,
       val?.corrected_body || ad.body,
       ad.cta_text || 'Enviar mensaje',
@@ -198,6 +229,8 @@ export async function orchestrateCampaignCreation(clientId: string): Promise<Orc
       val?.notes || null
     );
   }
+
+  console.log(`  -> Created 3 ad sets + ${validatedAds.length} ads across funnel stages`);
 
   // Client status: pending_admin_review (NOT campaign_ready yet — admin must approve first)
   await db.prepare(

@@ -319,6 +319,13 @@
         });
         const result = await res.json();
 
+        if (!res.ok && !result.success) {
+          const msg = result.error || result.errors?.map(e => e.message).join(', ') || 'Error ' + res.status;
+          document.getElementById('errorContainer').innerHTML = '<div class="error-msg">' + msg + '</div>';
+          btn.disabled = false;
+          btn.textContent = 'Siguiente →';
+          return;
+        }
         if (result.success) {
           _clientId = result.clientId;
           // Move to Step 2

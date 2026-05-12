@@ -6,10 +6,11 @@ import {
   searchInterests,
   searchGeoLocations,
 } from './meta-ads';
+import { getAdImageUrl } from './cloudinary-compose';
 
 export async function deployToMeta(campaignId: string): Promise<{
   metaCampaignId: string;
-  metaAdSetId: string;
+  metaAdSetIds: string[];
   metaAdIds: string[];
 }> {
   const db = getDb();
@@ -20,88 +21,112 @@ export async function deployToMeta(campaignId: string): Promise<{
   const client = await db.prepare('SELECT * FROM clients WHERE id = ?').get<any>(campaign.client_id);
   if (!client) throw new Error(`Client ${campaign.client_id} not found`);
 
-  const ads = await db.prepare(
+  const adSets = await db.prepare(
+    "SELECT * FROM ad_sets WHERE campaign_id = ? ORDER BY CASE stage WHEN 'TOFU' THEN 1 WHEN 'MOFU' THEN 2 ELSE 3 END"
+  ).all<any>(campaignId);
+
+  if (adSets.length === 0) throw new Error('No ad sets found for this campaign');
+
+  const allAds = await db.prepare(
     "SELECT * FROM ads WHERE campaign_id = ? AND validation_status = 'approved'"
   ).all<any>(campaignId);
 
-  if (ads.length === 0) throw new Error('No approved ads to deploy');
+  if (allAds.length === 0) throw new Error('No approved ads to deploy');
 
-  let targeting: any;
-  let budget: any;
-  try { targeting = JSON.parse(campaign.targeting_config); } catch { targeting = {}; }
-  try { budget = JSON.parse(campaign.budget_config); } catch { budget = {}; }
+  console.log(`[Meta Deploy] Starting funnel deployment for "${client.business_name}"...`);
+  console.log(`  → ${adSets.length} ad sets, ${allAds.length} ads total`);
 
-  console.log(`[Meta Deploy] Starting deployment for "${client.business_name}"...`);
-
-  // Step 1: Create Campaign
-  const dailyBudgetCents = Math.round((client.daily_budget_usd || 6.67) * 100);
-
+  // Step 1: Create Campaign on Meta
   const metaCampaignId = await createMetaCampaign({
     name: `Vortis - ${client.business_name}`,
     objective: client.campaign_objective,
-    dailyBudgetCents,
+    dailyBudgetCents: Math.round((client.daily_budget_usd || 6.67) * 100),
     status: 'PAUSED',
   });
+  console.log(`  Campaign created on Meta: ${metaCampaignId}`);
 
-  console.log(`  Campaign created: ${metaCampaignId}`);
-
-  // Step 2: Resolve targeting
-  const resolvedTargeting = await resolveTargeting(targeting, client);
-
-  // Step 3: Create Ad Set
-  const metaAdSetId = await createMetaAdSet({
-    name: `AdSet - ${client.business_name}`,
-    campaignId: metaCampaignId,
-    dailyBudgetCents,
-    targeting: resolvedTargeting,
-    optimizationGoal: client.campaign_objective,
-    status: 'PAUSED',
-  });
-
-  console.log(`  Ad Set created: ${metaAdSetId}`);
-
-  // Step 4: Create Ads
-  const metaAdIds: string[] = [];
-  const linkUrl = normalizeLinkUrl(client.destination_url, client.contact_phone);
-
+  // Step 2: Load client assets (uploaded photos)
   const assets = await db.prepare(
     'SELECT url FROM client_assets WHERE client_id = ? ORDER BY uploaded_at'
   ).all<any>(client.id);
   const imageUrls = assets.map(a => a.url);
 
-  for (let i = 0; i < ads.length; i++) {
-    const ad = ads[i];
-    // Cycle through uploaded images, or use placeholder
-    const imageUrl = imageUrls.length > 0 ? imageUrls[i % imageUrls.length] : undefined;
+  const linkUrl = normalizeLinkUrl(client.destination_url, client.contact_phone);
+  const metaAdSetIds: string[] = [];
+  const metaAdIds: string[] = [];
 
-    const metaAdId = await createMetaAd({
-      name: `Ad ${i + 1} - ${client.business_name}`,
-      adSetId: metaAdSetId,
-      headline: ad.headline,
-      body: ad.description,
-      description: ad.headline,
-      ctaType: ad.cta_type,
-      linkUrl,
-      imageUrl,
+  // Step 3: For each ad set (TOFU, MOFU, BOFU), create ad set + its ads
+  for (const adSet of adSets) {
+    let stageTargeting: any = {};
+    try { stageTargeting = JSON.parse(adSet.targeting_config); } catch {}
+
+    const resolvedTargeting = await resolveTargeting(stageTargeting, client);
+
+    // Create ad set on Meta
+    const metaAdSetId = await createMetaAdSet({
+      name: `${adSet.stage} - ${client.business_name}`,
+      campaignId: metaCampaignId,
+      dailyBudgetCents: adSet.daily_budget_cents,
+      targeting: resolvedTargeting,
+      optimizationGoal: client.campaign_objective,
       status: 'PAUSED',
     });
 
-    await db.prepare('UPDATE ads SET meta_ad_id = ? WHERE id = ?').run(metaAdId, ad.id);
-    metaAdIds.push(metaAdId);
-    console.log(`  Ad ${i + 1} created: ${metaAdId}`);
+    await db.prepare('UPDATE ad_sets SET meta_adset_id = ? WHERE id = ?').run(metaAdSetId, adSet.id);
+    metaAdSetIds.push(metaAdSetId);
+    console.log(`  AdSet ${adSet.stage} created on Meta: ${metaAdSetId}`);
+
+    // Get ads for this stage
+    const stageAds = allAds.filter(a => a.ad_set_id === adSet.id);
+    console.log(`    → ${stageAds.length} ads to deploy for ${adSet.stage}`);
+
+    for (let i = 0; i < stageAds.length; i++) {
+      const ad = stageAds[i];
+
+      // Auto-compose creative image
+      const clientPhotoUrl = imageUrls.length > 0 ? imageUrls[(metaAdIds.length) % imageUrls.length] : undefined;
+      const composedImageUrl = getAdImageUrl({
+        format: 'square',
+        headline: ad.headline,
+        ctaText: ad.cta_text || 'Enviar mensaje',
+        logoUrl: client.logo_url || undefined,
+        photoUrl: clientPhotoUrl,
+        brandColors: client.brand_colors || '',
+        businessName: client.business_name,
+        city: client.city,
+      });
+
+      const metaAdId = await createMetaAd({
+        name: `${adSet.stage} Ad ${i + 1} (${ad.angle || 'general'}) - ${client.business_name}`,
+        adSetId: metaAdSetId,
+        headline: ad.headline,
+        body: ad.description,
+        description: ad.headline,
+        ctaType: ad.cta_type,
+        linkUrl,
+        imageUrl: composedImageUrl,
+        status: 'PAUSED',
+      });
+
+      await db.prepare('UPDATE ads SET meta_ad_id = ?, creative_url = ? WHERE id = ?')
+        .run(metaAdId, composedImageUrl, ad.id);
+      metaAdIds.push(metaAdId);
+      console.log(`    Ad ${adSet.stage}-${i + 1} created: ${metaAdId}`);
+    }
   }
 
+  // Step 4: Update campaign in DB
   await db.prepare(
     `UPDATE campaigns SET meta_campaign_id = ?, meta_adset_id = ?, meta_status = 'PAUSED', status = 'deployed', updated_at = NOW() WHERE id = ?`
-  ).run(metaCampaignId, metaAdSetId, campaignId);
+  ).run(metaCampaignId, metaAdSetIds[0] || null, campaignId);
 
   await db.prepare(
     "UPDATE clients SET status = 'deployed', updated_at = NOW() WHERE id = ?"
   ).run(client.id);
 
-  console.log(`[Meta Deploy] DONE! Campaign deployed as PAUSED.`);
+  console.log(`[Meta Deploy] DONE! ${metaAdSetIds.length} ad sets, ${metaAdIds.length} ads (all PAUSED).`);
 
-  return { metaCampaignId, metaAdSetId, metaAdIds };
+  return { metaCampaignId, metaAdSetIds, metaAdIds };
 }
 
 async function resolveTargeting(targeting: any, client: any) {
@@ -109,33 +134,31 @@ async function resolveTargeting(targeting: any, client: any) {
   const ageMax = targeting.age_max || targeting.age_range?.max || 55;
 
   const genderMap: Record<string, number[]> = {
-    todos: [0],
-    hombres: [1],
-    mujeres: [2],
-    masculino: [1],
-    femenino: [2],
+    todos: [0], hombres: [1], mujeres: [2], masculino: [1], femenino: [2],
   };
-  const genders = genderMap[(targeting.genders || 'todos').toLowerCase()] || [0];
+  const gendersRaw = targeting.genders;
+  let genders: number[];
+  if (Array.isArray(gendersRaw)) genders = gendersRaw;
+  else genders = genderMap[(gendersRaw || 'todos').toLowerCase()] || [0];
 
   let geoLocations: any = { countries: [countryCode(client.country)] };
 
+  // Try to resolve city from targeting first, then client.city
+  const cityToSearch = targeting.geo_locations?.cities?.[0]?.name || client.city;
   try {
-    const cities = await searchGeoLocations(client.city);
+    const cities = await searchGeoLocations(cityToSearch);
     if (cities.length > 0) {
+      const radius = targeting.geo_locations?.cities?.[0]?.radius || 25;
       geoLocations = {
-        cities: [{
-          key: cities[0].key,
-          radius: 25,
-          distance_unit: 'kilometer',
-        }],
+        cities: [{ key: cities[0].key, radius, distance_unit: 'kilometer' }],
       };
     }
-  } catch (err) {
+  } catch {
     console.log('  Could not resolve city geo, using country fallback');
   }
 
   let interests: Array<{ id: string; name: string }> = [];
-  const interestNames = targeting.interests || targeting.detailed_targeting?.interests || [];
+  const interestNames = targeting.interests || [];
 
   for (const interest of interestNames.slice(0, 5)) {
     try {
@@ -150,43 +173,22 @@ async function resolveTargeting(targeting: any, client: any) {
   return { ageMin, ageMax, genders, geoLocations, interests };
 }
 
-/**
- * Returns a valid HTTPS URL for the ad's destination.
- * Handles 3 cases:
- * 1. destination_url is a valid URL → use it as-is
- * 2. destination_url is a phone number (or empty) → fall back to wa.me link
- * 3. No destination + no phone → use a placeholder Vortis page
- */
 function normalizeLinkUrl(destinationUrl: string | null | undefined, contactPhone: string | null | undefined): string {
   const dest = (destinationUrl || '').trim();
-
-  // Case 1: looks like a URL (starts with http or has a dot, no leading +)
-  if (dest && (dest.startsWith('http://') || dest.startsWith('https://'))) {
-    return dest;
-  }
+  if (dest && (dest.startsWith('http://') || dest.startsWith('https://'))) return dest;
   if (dest && /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(dest) && !dest.match(/^\+?\d/)) {
     return `https://${dest}`;
   }
-
-  // Case 2: phone number — build wa.me URL
   const phoneSource = dest.match(/^\+?\d{8,}/) ? dest : (contactPhone || '');
   const digits = phoneSource.replace(/\D/g, '');
-  if (digits.length >= 8) {
-    return `https://wa.me/${digits}`;
-  }
-
-  // Case 3: no useful destination → safe placeholder
+  if (digits.length >= 8) return `https://wa.me/${digits}`;
   return 'https://vortismedia.com';
 }
 
 function countryCode(country: string): string {
   const map: Record<string, string> = {
-    Argentina: 'AR',
-    Mexico: 'MX',
-    Colombia: 'CO',
-    Chile: 'CL',
-    'USA': 'US',
-    'USA (Latinos)': 'US',
+    Argentina: 'AR', Mexico: 'MX', Colombia: 'CO', Chile: 'CL',
+    'USA': 'US', 'USA (Latinos)': 'US',
   };
   return map[country] || 'AR';
 }

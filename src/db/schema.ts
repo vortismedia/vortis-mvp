@@ -71,11 +71,31 @@ CREATE TABLE IF NOT EXISTS campaigns (
 
 CREATE INDEX IF NOT EXISTS idx_campaigns_client ON campaigns(client_id);
 
+-- Ad sets (3 per campaign: TOFU, MOFU, BOFU)
+CREATE TABLE IF NOT EXISTS ad_sets (
+  id TEXT PRIMARY KEY,
+  campaign_id TEXT NOT NULL REFERENCES campaigns(id),
+  client_id TEXT NOT NULL REFERENCES clients(id),
+  stage TEXT NOT NULL,  -- 'TOFU' | 'MOFU' | 'BOFU'
+  name TEXT,
+  meta_adset_id TEXT,
+  targeting_config TEXT,
+  status TEXT DEFAULT 'PAUSED',
+  daily_budget_cents INTEGER DEFAULT 222,  -- ~$6.67/3 = $2.22 per ad set
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_adsets_campaign ON ad_sets(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_adsets_stage ON ad_sets(stage);
+
 -- Ads
 CREATE TABLE IF NOT EXISTS ads (
   id TEXT PRIMARY KEY,
   campaign_id TEXT NOT NULL REFERENCES campaigns(id),
   client_id TEXT NOT NULL REFERENCES clients(id),
+  ad_set_id TEXT REFERENCES ad_sets(id),
+  funnel_stage TEXT,  -- 'TOFU' | 'MOFU' | 'BOFU'
+  angle TEXT,  -- psychological angle (curiosidad, urgencia, etc.)
 
   meta_ad_id TEXT,
 
