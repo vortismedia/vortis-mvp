@@ -5,6 +5,7 @@ import {
   createMetaAd,
   searchInterests,
   searchGeoLocations,
+  getOrCreateClientAdAccount,
 } from './meta-ads';
 import { getAdImageUrl } from './cloudinary-compose';
 
@@ -36,12 +37,30 @@ export async function deployToMeta(campaignId: string): Promise<{
   console.log(`[Meta Deploy] Starting funnel deployment for "${client.business_name}"...`);
   console.log(`  → ${adSets.length} ad sets, ${allAds.length} ads total`);
 
-  // Step 1: Create Campaign on Meta (use business name only, clean hierarchy)
+  // Step 0: Resolve ad account. Try dedicated sub-account; fall back to shared if Meta rejects.
+  let accountId: string | undefined;
+  if (client.meta_ad_account_id) {
+    accountId = client.meta_ad_account_id;
+    console.log(`  Using existing client ad account: ${accountId}`);
+  } else {
+    const subAccount = await getOrCreateClientAdAccount(client.business_name);
+    if (subAccount) {
+      accountId = subAccount;
+      await db.prepare('UPDATE clients SET meta_ad_account_id = ? WHERE id = ?').run(subAccount, client.id);
+      console.log(`  Created dedicated client ad account: ${subAccount}`);
+    } else {
+      accountId = undefined; // Falls back to shared META_AD_ACCOUNT_ID inside API functions
+      console.log(`  Using shared account (sub-account not available — limit/verification)`);
+    }
+  }
+
+  // Step 1: Create Campaign on Meta
   const metaCampaignId = await createMetaCampaign({
     name: client.business_name,
     objective: client.campaign_objective,
     dailyBudgetCents: Math.round((client.daily_budget_usd || 6.67) * 100),
     status: 'PAUSED',
+    accountId,
   });
   console.log(`  Campaign created on Meta: ${metaCampaignId}`);
 
@@ -75,6 +94,7 @@ export async function deployToMeta(campaignId: string): Promise<{
       targeting: resolvedTargeting,
       optimizationGoal: client.campaign_objective,
       status: 'PAUSED',
+      accountId,
     });
 
     await db.prepare('UPDATE ad_sets SET meta_adset_id = ? WHERE id = ?').run(metaAdSetId, adSet.id);
@@ -123,6 +143,7 @@ export async function deployToMeta(campaignId: string): Promise<{
         linkUrl,
         imageUrl: composedImageUrl,
         status: 'PAUSED',
+        accountId,
       });
 
       await db.prepare('UPDATE ads SET meta_ad_id = ?, creative_url = ? WHERE id = ?')

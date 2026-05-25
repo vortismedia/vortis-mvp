@@ -110,15 +110,51 @@ async function _doMetaRequest(
   return data;
 }
 
+/**
+ * Get or create a per-client ad account under the Business Manager.
+ * Returns the new account id (act_XXX). If Meta rejects (limit reached, not verified, etc.),
+ * returns null so callers fall back to the shared account.
+ */
+export async function getOrCreateClientAdAccount(clientName: string): Promise<string | null> {
+  const businessId = process.env.META_BUSINESS_ID;
+  if (!businessId) return null;
+
+  try {
+    // Fetch parent account's timezone + currency to reuse (guarantees valid values)
+    const parent = await metaApiRequest(
+      `/${getAdAccountId()}`,
+      'GET',
+      { fields: 'timezone_id,currency' }
+    );
+
+    const result = await metaApiRequest(`/${businessId}/adaccounts`, 'POST', {
+      name: `Cliente: ${clientName}`.substring(0, 100),
+      currency: parent.currency || 'USD',
+      timezone_id: parent.timezone_id ?? 392,
+      end_advertiser: businessId,
+      media_agency: businessId,
+      partner: 'NONE',
+    });
+
+    // result.id may come as "act_XXX" or just the id
+    const id = String(result.id || result.account_id || '');
+    return id.startsWith('act_') ? id : `act_${id}`;
+  } catch (err: any) {
+    console.warn(`[Meta] Could not create sub-account for "${clientName}": ${err.message}. Falling back to shared account.`);
+    return null;
+  }
+}
+
 export interface MetaCampaignInput {
   name: string;
   objective: string;
   dailyBudgetCents: number;
   status?: 'PAUSED' | 'ACTIVE';
+  accountId?: string; // Override the shared account (for per-client sub-accounts)
 }
 
 export async function createMetaCampaign(input: MetaCampaignInput): Promise<string> {
-  const accountId = getAdAccountId();
+  const accountId = input.accountId || getAdAccountId();
 
   const objectiveMap: Record<string, string> = {
     'Mensajes por WhatsApp': 'OUTCOME_ENGAGEMENT',
@@ -153,10 +189,11 @@ export interface MetaAdSetInput {
   optimizationGoal: string;
   startTime?: string;
   status?: 'PAUSED' | 'ACTIVE';
+  accountId?: string;
 }
 
 export async function createMetaAdSet(input: MetaAdSetInput): Promise<string> {
-  const accountId = getAdAccountId();
+  const accountId = input.accountId || getAdAccountId();
 
   const targeting: Record<string, any> = {
     age_min: input.targeting.ageMin,
@@ -201,10 +238,11 @@ export interface MetaAdInput {
   linkUrl: string;
   imageUrl?: string;
   status?: 'PAUSED' | 'ACTIVE';
+  accountId?: string;
 }
 
 export async function createMetaAd(input: MetaAdInput): Promise<string> {
-  const accountId = getAdAccountId();
+  const accountId = input.accountId || getAdAccountId();
   const pageId = getPageId();
 
   const ctaMap: Record<string, string> = {
